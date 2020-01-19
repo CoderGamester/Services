@@ -12,11 +12,13 @@ namespace GameLoversEditor.Services.Tests
 	{
 		private PoolService _poolService;
 		private PoolableEntity _poolableEntity;
+		private int initialSize = 5;
 
-		public abstract class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn
+		public class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn, IPoolEntityCleared
 		{
-			public abstract void OnSpawn();
-			public abstract void OnDespawn();
+			public void OnSpawn() {}
+			public void OnDespawn() {}
+			public void OnCleared() {}
 		}
 
 		[SetUp]
@@ -24,28 +26,22 @@ namespace GameLoversEditor.Services.Tests
 		{
 			_poolService = new PoolService();
 			_poolableEntity = Substitute.For<PoolableEntity>();
+			
+			_poolService.InitPool(initialSize, () => Substitute.For<PoolableEntity>());
 		}
 
 		[Test]
 		public void Initialize_SameType_ThrowsException()
 		{
-			var initialSize = 5;
-
-			_poolService.InitPool(initialSize, _poolableEntity, poolableEntity => Substitute.For<PoolableEntity>());
-			
-			Assert.Throws<InvalidOperationException>(() =>
+			Assert.Throws<ArgumentException>(() =>
 			{
-				_poolService.InitPool(initialSize, _poolableEntity, poolableEntity => Substitute.For<PoolableEntity>());
+				_poolService.InitPool(initialSize, () => Substitute.For<PoolableEntity>());
 			});
 		}
 
 		[Test]
 		public void Spawn_Successfully()
 		{
-			var initialSize = 5;
-			
-			_poolService.InitPool(initialSize, _poolableEntity, poolableEntity => Substitute.For<PoolableEntity>());
-			
 			var newEntity = _poolService.Spawn<PoolableEntity>();
 			
 			newEntity.Received().OnSpawn();
@@ -57,8 +53,9 @@ namespace GameLoversEditor.Services.Tests
 		public void Spawn_EmptyPool_Successfully()
 		{
 			var initialSize = 0;
+			var poolService = new PoolService();
 			
-			_poolService.InitPool(initialSize, _poolableEntity, poolableEntity => Substitute.For<PoolableEntity>());
+			poolService.InitPool(initialSize, () => Substitute.For<PoolableEntity>());
 			
 			var newEntity = _poolService.Spawn<PoolableEntity>();
 			
@@ -70,15 +67,14 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Spawn_NotInitialized_ThrowsException()
 		{
-			Assert.Throws<ArgumentException>(() => _poolService.Spawn<PoolableEntity>());
+			var poolService = new PoolService();
+			
+			Assert.Throws<ArgumentException>(() => poolService.Spawn<PoolableEntity>());
 		}
 
 		[Test]
 		public void Despawn_Successfully()
 		{
-			var initialSize = 5;
-			
-			_poolService.InitPool(initialSize, _poolableEntity, poolableEntity => Substitute.For<PoolableEntity>());
 			_poolService.Despawn(_poolableEntity);
 			
 			_poolableEntity.Received().OnDespawn();
@@ -87,20 +83,19 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Despawn_NotInitialized_ThrowsException()
 		{
-			Assert.Throws<ArgumentException>(() => _poolService.Despawn(_poolableEntity));
+			var poolService = new PoolService();
+			
+			Assert.Throws<ArgumentException>(() => poolService.Despawn(_poolableEntity));
 		}
 
 		[Test]
 		public void DespawnAll_Successfully()
 		{
-			var initialSize = 5;
 			var entities = new List<PoolableEntity>();
-			
-			_poolService.InitPool(initialSize, _poolableEntity, poolableEntity => Substitute.For<PoolableEntity>());
 
 			for (int i = 0; i < initialSize; i++)
 			{
-				entities.Add(_poolService.Spawn<PoolableEntity>());
+				entities.Add(Substitute.For<PoolableEntity>());
 			}
 			
 			_poolService.DespawnAll<PoolableEntity>();
@@ -114,10 +109,10 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Clear_Successfully()
 		{
-			var initialSize = 5;
+			_poolService.Despawn(_poolableEntity);
+			_poolService.Clear<PoolableEntity>();
 			
-			_poolService.InitPool(initialSize, _poolableEntity, poolableEntity => Substitute.For<PoolableEntity>());
-			_poolService.Clear<PoolableEntity>(poolableEntity => { });
+			_poolableEntity.Received().OnCleared();
 			
 			Assert.Throws<ArgumentException>(() => _poolService.Spawn<PoolableEntity>());
 			Assert.Throws<ArgumentException>(() => _poolService.Despawn(_poolableEntity));
@@ -126,18 +121,17 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Clear_NotInitialized_ThrowsException()
 		{
-			Assert.Throws<ArgumentException>(() => _poolService.Clear<PoolableEntity>(null));
+			var poolService = new PoolService();
+			
+			Assert.Throws<ArgumentException>(() => poolService.Clear<PoolableEntity>());
 		}
 
 		[Test]
 		public void Clear_SameType_ThrowsException()
 		{
-			var initialSize = 5;
+			_poolService.Clear<PoolableEntity>();
 			
-			_poolService.InitPool(initialSize, _poolableEntity, poolableEntity => Substitute.For<PoolableEntity>());
-			_poolService.Clear<PoolableEntity>(poolableEntity => { });
-			
-			Assert.Throws<ArgumentException>(() => _poolService.Clear<PoolableEntity>(null));
+			Assert.Throws<ArgumentException>(() => _poolService.Clear<PoolableEntity>());
 		}
 	}
 }

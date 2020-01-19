@@ -44,7 +44,7 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Resolve_NotBinded_ThrowsException()
 		{
-			Assert.Throws<ArgumentNotFoundException>(() => MainInstaller.Resolve<IInterface>());
+			Assert.Throws<ArgumentException>(() => MainInstaller.Resolve<IInterface>());
 		}
 	}
 }
