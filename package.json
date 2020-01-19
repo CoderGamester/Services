@@ -1,7 +1,7 @@
 {
   "name": "com.gamelovers.services",
   "displayName": "Services",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "unity": "2019.3",
   "description": "This package contains a set of services to ease the development of a basic game architecture. The services provided by this package are:\n\n- CoroutineService to control all coroutines with an end callback\n- PoolService to control all object pools by type\n- MessageBrokerService to help decoupled modules/systems to communicate with each other while maintaining the inversion of control principle\n- TimeService to have a precise control on the game's time (Unix, Unity or DateTime)\n- TickService to have a single control point on Unity update cycle\n- MainInstaller to have a simple dependency injection binding installer",
   "type": "library",
