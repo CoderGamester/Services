@@ -14,11 +14,10 @@ namespace GameLoversEditor.Services.Tests
 		private PoolableEntity _poolableEntity;
 		private int initialSize = 5;
 
-		public class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn, IPoolEntityCleared
+		public class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn
 		{
 			public void OnSpawn() {}
 			public void OnDespawn() {}
-			public void OnCleared() {}
 		}
 
 		[SetUp]
@@ -74,26 +73,6 @@ namespace GameLoversEditor.Services.Tests
 			{
 				entity.Received().OnDespawn();
 			}
-		}
-
-		[Test]
-		public void Clear_Successfully()
-		{
-			_pool.Despawn(_poolableEntity);
-			_pool.Clear();
-			
-			_poolableEntity.Received().OnCleared();
-			
-			Assert.DoesNotThrow(() => _pool.Spawn());
-			Assert.DoesNotThrow(() => _pool.Despawn(_poolableEntity));
-		}
-
-		[Test]
-		public void Clear_Twice_NothingHappens()
-		{
-			_pool.Clear();
-			
-			Assert.DoesNotThrow(() => _pool.Clear());
 		}
 	}
 }

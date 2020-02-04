@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using GameLovers.Services;
 using NSubstitute;
 using NUnit.Framework;
@@ -11,127 +12,98 @@ namespace GameLoversEditor.Services.Tests
 	public class PoolServiceTest
 	{
 		private PoolService _poolService;
-		private PoolableEntity _poolableEntity;
+		private IObjectPool<PoolableEntity> _pool;
 		private int initialSize = 5;
 
-		public class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn, IPoolEntityCleared
+		public class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn
 		{
 			public void OnSpawn() {}
 			public void OnDespawn() {}
-			public void OnCleared() {}
 		}
 
 		[SetUp]
 		public void Init()
 		{
 			_poolService = new PoolService();
-			_poolableEntity = Substitute.For<PoolableEntity>();
+			_pool = Substitute.For<IObjectPool<PoolableEntity>>();
 			
-			_poolService.InitPool(initialSize, () => Substitute.For<PoolableEntity>());
+			_poolService.AddPool(_pool);
 		}
 
 		[Test]
-		public void Initialize_SameType_ThrowsException()
+		public void AddPool_Successfully()
 		{
-			Assert.Throws<ArgumentException>(() =>
-			{
-				_poolService.InitPool(initialSize, () => Substitute.For<PoolableEntity>());
-			});
+			Assert.True(_poolService.HasPool<PoolableEntity>());
+		}
+
+		[Test]
+		public void AddPool_SameType_ThrowsException()
+		{
+			Assert.Throws<ArgumentException>(() => _poolService.AddPool(_pool));
 		}
 
 		[Test]
 		public void Spawn_Successfully()
 		{
-			var newEntity = _poolService.Spawn<PoolableEntity>();
+			var entity = Substitute.For<PoolableEntity>();
+
+			_pool.Spawn().Returns(entity);
 			
-			newEntity.Received().OnSpawn();
-			
-			Assert.AreNotSame(_poolableEntity, newEntity);
+			Assert.AreEqual(entity,_poolService.Spawn<PoolableEntity>());
+
+			_pool.Received().Spawn();
 		}
 
 		[Test]
-		public void Spawn_EmptyPool_Successfully()
+		public void Spawn_NotAddedPool_ThrowsException()
 		{
-			var initialSize = 0;
-			var poolService = new PoolService();
+			_poolService = new PoolService();
 			
-			poolService.InitPool(initialSize, () => Substitute.For<PoolableEntity>());
-			
-			var newEntity = _poolService.Spawn<PoolableEntity>();
-			
-			newEntity.Received().OnSpawn();
-			
-			Assert.AreNotSame(_poolableEntity, newEntity);
-		}
-
-		[Test]
-		public void Spawn_NotInitialized_ThrowsException()
-		{
-			var poolService = new PoolService();
-			
-			Assert.Throws<ArgumentException>(() => poolService.Spawn<PoolableEntity>());
+			Assert.Throws<ArgumentException>(() => _poolService.Spawn<PoolableEntity>());
 		}
 
 		[Test]
 		public void Despawn_Successfully()
 		{
-			_poolService.Despawn(_poolableEntity);
+			var entity = Substitute.For<PoolableEntity>();
 			
-			_poolableEntity.Received().OnDespawn();
+			_poolService.Despawn(entity);
+			
+			_pool.Received().Despawn(entity);
 		}
 
 		[Test]
-		public void Despawn_NotInitialized_ThrowsException()
+		public void Despawn_NotAddedPool_ThrowsException()
 		{
-			var poolService = new PoolService();
+			var entity = Substitute.For<PoolableEntity>();
 			
-			Assert.Throws<ArgumentException>(() => poolService.Despawn(_poolableEntity));
+			_poolService = new PoolService();
+			
+			Assert.Throws<ArgumentException>(() => _poolService.Despawn(entity));
 		}
 
 		[Test]
 		public void DespawnAll_Successfully()
 		{
-			var entities = new List<PoolableEntity>();
-
-			for (int i = 0; i < initialSize; i++)
-			{
-				entities.Add(Substitute.For<PoolableEntity>());
-			}
-			
 			_poolService.DespawnAll<PoolableEntity>();
 
-			foreach (var entity in entities)
-			{
-				entity.Received().OnDespawn();
-			}
+			_pool.Received().DespawnAll();
 		}
 
 		[Test]
-		public void Clear_Successfully()
+		public void RemovePool_Successfully()
 		{
-			_poolService.Despawn(_poolableEntity);
-			_poolService.Clear<PoolableEntity>();
-			
-			_poolableEntity.Received().OnCleared();
-			
-			Assert.Throws<ArgumentException>(() => _poolService.Spawn<PoolableEntity>());
-			Assert.Throws<ArgumentException>(() => _poolService.Despawn(_poolableEntity));
+			_poolService.RemovePool<PoolableEntity>();
+				
+			Assert.False(_poolService.HasPool<PoolableEntity>());
 		}
 
 		[Test]
-		public void Clear_NotInitialized_ThrowsException()
+		public void RemovePool_NotAdded_DoesNothing()
 		{
-			var poolService = new PoolService();
+			_poolService = new PoolService();
 			
-			Assert.Throws<ArgumentException>(() => poolService.Clear<PoolableEntity>());
-		}
-
-		[Test]
-		public void Clear_SameType_ThrowsException()
-		{
-			_poolService.Clear<PoolableEntity>();
-			
-			Assert.Throws<ArgumentException>(() => _poolService.Clear<PoolableEntity>());
+			Assert.DoesNotThrow(() => _poolService.RemovePool<PoolableEntity>());
 		}
 	}
 }

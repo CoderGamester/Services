@@ -51,11 +51,12 @@ namespace GameLovers.Services
 		float UnityTimeFromUnixTime(long time);
 	}
 
-	/// <summary>
+	/// <inheritdoc cref="ITimeService"/>
+	/// <remarks>
 	/// Manipulates the service's time.
 	/// This can be useful in cases where we want to speed up the game or to synchronize time with an outside source
-	/// </summary>
-	public interface ITimeManipulator
+	/// </remarks>
+	public interface ITimeManipulator : ITimeService
 	{
 		/// <summary>
 		/// Adds <paramref name="timeInSeconds"/> to the current game's clock.
@@ -70,7 +71,7 @@ namespace GameLovers.Services
 	}
 
 	/// <inheritdoc cref="ITimeService"/>
-	public class TimeService : ITimeService, ITimeManipulator
+	public class TimeService : ITimeManipulator
 	{
 		private static readonly DateTime UnixInitialTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
