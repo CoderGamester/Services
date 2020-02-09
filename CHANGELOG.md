@@ -4,6 +4,17 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+
+## [0.3.0] - 2020-02-09
+
+- Now the *MainInstaller* checks the object binding relationship in compile time
+- The *CoroutineService* no longer fails on null coroutines
+- Improved the *ObjectPools* helper classes with a now static global instatiator for game objects.
+
+**Changed**:
+- Now the *PoolService* is only a service container for objects pools and no longer creates/initializes new pools.
+- Removed *Pool.Clear* functionality. Use *DespawnAll* or delete the pool instead 
+
 ## [0.2.0] - 2020-01-19
 
 - Added new *ObjectPool* & *GameObjectPool* pools to allow to allow to use object pools independent from the *PoolService*. This allows to have different pools of the same type in the project in different object controllers
@@ -11,7 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added new unit tests for the *ObjectPool*
 
 **Changed**:
-- Now the PoolService.Clear() does not take any action parameters. To have a callback when the entity is cleared, please have the entity implement the *IPoolEntityClear* interface
+- Now the *PoolService.Clear()* does not take any action parameters. To have a callback when the entity is cleared, please have the entity implement the *IPoolEntityClear* interface
 
 ## [0.1.1] - 2020-01-06
 

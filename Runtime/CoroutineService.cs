@@ -140,13 +140,18 @@ namespace GameLovers.Services
 		/// <inheritdoc />
 		public void StopCoroutine(Coroutine coroutine)
 		{
-			_serviceObject.ExternalStopCoroutine(coroutine);
+			if (coroutine == null)
+			{
+				return;
+			}
+			
+			_serviceObject?.ExternalStopCoroutine(coroutine);
 		}
 
 		/// <inheritdoc />
 		public void StopAllCoroutines()
 		{
-			_serviceObject.StopAllCoroutines();
+			_serviceObject?.StopAllCoroutines();
 		}
 
 		private static IEnumerator InternalCoroutine(IEnumerator routine, ICompleteCoroutine completed)

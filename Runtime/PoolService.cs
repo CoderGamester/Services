@@ -14,20 +14,20 @@ namespace GameLovers.Services
 	public interface IPoolService
 	{
 		/// <summary>
-		/// Initializes a new pool with the given <paramref name="initialSize"/>
-		/// It invokes the <paramref name="instantiator"/> function every time a new entity is created in the pool
+		/// Adds the given <paramref name="pool"/> of <typeparamref name="T"/> to the service
 		/// </summary>
-		void InitPool<T>(int initialSize, Func<T> instantiator) where T : new();
-		
-		/// <summary>
-		/// Initializes a new pool with the given <paramref name="initialSize"/> and a sample entity given back in the <paramref name="instantiator"/>
-		/// It invokes the <paramref name="instantiator"/> function every time a new entity is created in the pool
-		/// </summary>
-		void InitPool<T>(int initialSize, T sampleEntity, Func<T, T> instantiator) where T : Object;
+		/// <exception cref="ArgumentException">
+		/// Thrown if the service already has a pool of the given <typeparamref name="T"/> type
+		/// </exception>
+		void AddPool<T>(IObjectPool<T> pool);
 
 		/// <summary>
-		/// Checks if exists a pool of the given type already exists or needs to be initialized with
-		/// <seealso cref="InitPool{T}(int,System.Func{T})"/>  before calling <seealso cref="Spawn{T}"/>
+		/// Removes the pool of the given <typeparamref name="T"/>
+		/// </summary>
+		void RemovePool<T>();
+
+		/// <summary>
+		/// Checks if exists a pool of the given type already exists or needs to be added before calling <seealso cref="Spawn{T}"/>
 		/// </summary>
 		bool HasPool<T>();
 
@@ -35,33 +35,39 @@ namespace GameLovers.Services
 		bool HasPool(Type type);
 		
 		/// <inheritdoc cref="IObjectPool{T}.Spawn"/>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the service does not contains a pool of the given <typeparamref name="T"/> type
+		/// </exception>
 		T Spawn<T>();
 		
 		/// <inheritdoc cref="IObjectPool{T}.Despawn"/>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the service does not contains a pool of the given <typeparamref name="T"/> type
+		/// </exception>
 		void Despawn<T>(T entity);
 
 		/// <inheritdoc cref="IObjectPool{T}.DespawnAll"/>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the service does not contains a pool of the given <typeparamref name="T"/> type
+		/// </exception>
 		void DespawnAll<T>();
-
-		/// <inheritdoc cref="IObjectPool{T}.Clear"/>
-		void Clear<T>();
 	}
 	
 	/// <inheritdoc />
 	public class PoolService : IPoolService
 	{
 		private readonly Dictionary<Type, IObjectPool> _pools = new Dictionary<Type, IObjectPool>();
-		
+
 		/// <inheritdoc />
-		public void InitPool<T>(int initialSize, Func<T> instantiator) where T : new()
+		public void AddPool<T>(IObjectPool<T> pool)
 		{
-			_pools.Add(typeof(T), new ObjectPool<T>(initialSize, instantiator));
+			_pools.Add(typeof(T), pool);
 		}
 
 		/// <inheritdoc />
-		public void InitPool<T>(int initialSize, T sampleEntity, Func<T, T> instantiator) where T : Object
+		public void RemovePool<T>()
 		{
-			_pools.Add(typeof(T), new GameObjectPool<T>(initialSize, sampleEntity, instantiator));
+			_pools.Remove(typeof(T));
 		}
 
 		/// <inheritdoc />
@@ -92,13 +98,6 @@ namespace GameLovers.Services
 		public void DespawnAll<T>()
 		{
 			GetPool<T>().DespawnAll();
-		}
-
-		/// <inheritdoc />
-		public void Clear<T>()
-		{
-			GetPool<T>().Clear();
-			_pools.Remove(typeof(T));
 		}
 
 		private IObjectPool<T> GetPool<T>()
@@ -133,29 +132,12 @@ namespace GameLovers.Services
 		/// </summary>
 		void OnDespawn();
 	}
-	
-	/// <summary>
-	/// This interface allows pooled objects to be notified when they are cleared from the pool
-	/// </summary>
-	public interface IPoolEntityCleared
-	{
-		/// <summary>
-		/// Invoked when the entity is cleared
-		/// </summary>
-		void OnCleared();
-	}
 
 	/// <summary>
 	/// Simple object pool implementation that can handle any type of entity objects
 	/// </summary>
 	public interface IObjectPool
 	{
-		/// <summary>
-		/// Clears the pool
-		/// This function does not clear the entity. For that, have the entity implement <see cref="IPoolEntityCleared"/> or do it externally
-		/// </summary>
-		void Clear();
-		
 		/// <summary>
 		/// Despawns all active spawned entities and returns them back to the pool to be used again later
 		/// This function does not reset the entity. For that, have the entity implement <see cref="IPoolEntityDespawn"/> or do it externally
@@ -198,19 +180,6 @@ namespace GameLovers.Services
 				_stack.Push(instantiator.Invoke(sampleEntity));
 			}
 		}
-		
-		/// <inheritdoc />
-		public void Clear()
-		{
-			for (var i = 0; i < _stack.Count; i++)
-			{
-				var entity =_stack.Pop() as IPoolEntityCleared;
-				
-				entity?.OnCleared();
-			}
-			
-			_spawnedEntities.Clear();
-		}
 
 		/// <inheritdoc />
 		public T Spawn()
@@ -247,21 +216,44 @@ namespace GameLovers.Services
 	}
 
 	/// <inheritdoc />
-	public class ObjectPool<T> : ObjectPoolBase<T> where T : new()
+	public class ObjectPool<T> : ObjectPoolBase<T>
 	{
-		public ObjectPool(int initSize, Func<T> instantiator) : base(initSize, instantiator(), newEntity => instantiator.Invoke())
+		public ObjectPool(int initSize, Func<T> instantiator) : base(initSize, instantiator(), entityRef => instantiator.Invoke())
+		{
+		}
+	}/// <inheritdoc />
+	/// <remarks>
+	/// Useful to for pools that use object references to create new instances (ex: GameObjects)
+	/// </remarks>
+	public class ObjectRefPool<T> : ObjectPoolBase<T>
+	{
+		public ObjectRefPool(int initSize, T sampleEntity, Func<T, T> instantiator) : base(initSize, sampleEntity, instantiator)
 		{
 		}
 	}
 
 	/// <inheritdoc />
 	/// <remarks>
-	/// <see cref="IObjectPool"/> implementation for objects of type <see cref="Object"/>
+	/// Useful to for pools that use object references to create new <see cref="GameObject"/>
 	/// </remarks>
-	public class GameObjectPool<T> : ObjectPoolBase<T> where T : Object
+	public class GameObjectPool<T> : ObjectRefPool<T> where T : MonoBehaviour
 	{
-		public GameObjectPool(int initSize, T sampleEntity, Func<T, T> instantiator) : base(initSize, sampleEntity, instantiator)
+		public GameObjectPool(int initSize, T sampleEntity) : base(initSize, sampleEntity, Instantiator)
 		{
+		}
+
+		/// <summary>
+		/// Generic instantiator for <see cref="GameObject"/> pools
+		/// </summary>
+		/// <param name="entityRef"></param>
+		/// <returns></returns>
+		public static T Instantiator(T entityRef)
+		{
+			var instance = Object.Instantiate(entityRef, entityRef.transform.parent, true);
+
+			instance.gameObject.SetActive(false);
+
+			return instance;
 		}
 	}
 }

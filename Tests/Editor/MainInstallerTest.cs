@@ -32,13 +32,7 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Bind_NotInterface_ThrowsException()
 		{
-			Assert.Throws<ArgumentException>(() => MainInstaller.Bind<Implementation>(new Implementation()));
-		}
-
-		[Test]
-		public void Bind_NotImplementing_ThrowsException()
-		{
-			Assert.Throws<ArgumentException>(() => MainInstaller.Bind<IInterface>(new int[0]));
+			Assert.Throws<ArgumentException>(() => MainInstaller.Bind(new Implementation()));
 		}
 
 		[Test]

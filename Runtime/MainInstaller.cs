@@ -22,18 +22,13 @@ namespace GameLovers.Services
 		/// <exception cref="ArgumentException">
 		/// Thrown if the given <paramref name="instance"/> doesn't implement <typeparamref name="T"/> interface
 		/// </exception>
-		public static void Bind<T>(object instance) where T : class
+		public static void Bind<T>(T instance) where T : class
 		{
 			var type = typeof(T);
 
 			if (!type.IsInterface)
 			{
 				throw new ArgumentException($"Cannot bind {instance} because {type} is not an interface");
-			}
-
-			if (!(instance is T))
-			{
-				throw new ArgumentException($"Cannot bind the given instance because it doesn't implement the {type} interface");
 			}
 
 			_bindings.Add(type, instance);
