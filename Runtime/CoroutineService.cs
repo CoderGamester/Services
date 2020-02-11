@@ -253,7 +253,10 @@ namespace GameLovers.Services
 		/// <inheritdoc cref="ICoroutineService.StopCoroutine(Coroutine)"/>
 		public void ExternalStopCoroutine(Coroutine coroutine)
 		{
-			StopCoroutine(coroutine);
+			if (gameObject != null)
+			{
+				StopCoroutine(coroutine);
+			}
 		}
 	}
 }
