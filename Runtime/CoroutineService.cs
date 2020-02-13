@@ -140,18 +140,23 @@ namespace GameLovers.Services
 		/// <inheritdoc />
 		public void StopCoroutine(Coroutine coroutine)
 		{
-			if (coroutine == null)
+			if (coroutine == null || _serviceObject == null || _serviceObject.gameObject == null)
 			{
 				return;
 			}
 			
-			_serviceObject?.ExternalStopCoroutine(coroutine);
+			_serviceObject.ExternalStopCoroutine(coroutine);
 		}
 
 		/// <inheritdoc />
 		public void StopAllCoroutines()
 		{
-			_serviceObject?.StopAllCoroutines();
+			if (_serviceObject == null || _serviceObject.gameObject == null)
+			{
+				return;
+			}
+			
+			_serviceObject.StopAllCoroutines();
 		}
 
 		private static IEnumerator InternalCoroutine(IEnumerator routine, ICompleteCoroutine completed)
@@ -253,10 +258,7 @@ namespace GameLovers.Services
 		/// <inheritdoc cref="ICoroutineService.StopCoroutine(Coroutine)"/>
 		public void ExternalStopCoroutine(Coroutine coroutine)
 		{
-			if (gameObject != null)
-			{
-				StopCoroutine(coroutine);
-			}
+			StopCoroutine(coroutine);
 		}
 	}
 }
