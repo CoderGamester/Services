@@ -206,9 +206,10 @@ namespace GameLovers.Services
 		/// <inheritdoc />
 		public void DespawnAll()
 		{
-			for (var i = 0; i < _spawnedEntities.Count; i++)
+			var entitiesCopy = new List<T>(_spawnedEntities);
+			foreach (var entity in entitiesCopy)
 			{
-				Despawn(_spawnedEntities[i]);
+				Despawn(entity);
 			}
 
 			_spawnedEntities.Clear();

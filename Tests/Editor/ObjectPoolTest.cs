@@ -64,7 +64,7 @@ namespace GameLoversEditor.Services.Tests
 
 			for (int i = 0; i < initialSize; i++)
 			{
-				entities.Add(Substitute.For<PoolableEntity>());
+				entities.Add(_pool.Spawn());
 			}
 			
 			_pool.DespawnAll();
