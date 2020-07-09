@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GameLovers.Services;
+using NSubstitute;
 using NUnit.Framework;
 
 // ReSharper disable once CheckNamespace
@@ -11,33 +12,30 @@ namespace GameLoversEditor.Services.Tests
 	public class DataServiceTest
 	{
 		private DataService _dataService;
-		private DataMockup _data;
 
-		public class DataMockup
-		{
-			public int Int;
-			public string String;
-		}
+		// ReSharper disable once MemberCanBePrivate.Global
+		public interface IDataMockup {}
 
 		[SetUp]
 		public void Init()
 		{
 			_dataService = new DataService();
-			_data = new DataMockup();
 		}
 
 		[Test]
 		public void AddData_Successfully()
 		{
-			_dataService.AddData(_data);
+			var data = Substitute.For<IDataMockup>();
+			
+			_dataService.AddData(data);
 
-			Assert.AreSame(_data, _dataService.GetData<DataMockup>());
+			Assert.AreSame(data, _dataService.GetData<IDataMockup>());
 		}
 
 		[Test]
 		public void GetData_NotFound_ThrowsException()
 		{
-			Assert.Throws<KeyNotFoundException>(() => _dataService.GetData<DataMockup>());
+			Assert.Throws<KeyNotFoundException>(() => _dataService.GetData<IDataMockup>());
 		}
 	}
 }
