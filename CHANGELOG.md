@@ -4,6 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2020-07-10
+
+**Changed**:
+- Renamed *IDataWriter* and it's *FlushData* methods to *IDataSaver* & *SaveData* respectively to match with it's execution logic scope
+- Moved the *AddData* to the *IDataService* to allow the *IDataSaver* have the single responsibility of saving data into disk  
+
 ## [0.4.1] - 2020-07-09
 
 - Added *CommandService*

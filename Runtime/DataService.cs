@@ -19,24 +19,19 @@ namespace GameLovers.Services
 	}
 	
 	/// <summary>
-	/// This interface provides the possibility to write data to disk and into memory only
+	/// This interface provides the possibility to the current memory data to disk
 	/// </summary>
-	public interface IDataWriter
+	public interface IDataSaver
 	{
-		/// <summary>
-		/// Adds the given <paramref name="data"/> to this logic state to be maintained in memory
-		/// </summary>
-		void AddData<T>(T data) where T : class;
-		
 		/// <summary>
 		/// Saves the game's given <typeparamref name="T"/> data to disk
 		/// </summary>
-		void FlushData<T>() where T : class;
+		void SaveData<T>() where T : class;
 		
 		/// <summary>
 		/// Saves all game's data to disk
 		/// </summary>
-		void FlushAllData();
+		void SaveAllData();
 	}
 
 	/// <summary>
@@ -54,8 +49,12 @@ namespace GameLovers.Services
 	/// This service allows to manage all the persistent data in the game.
 	/// Data are strictly reference types to guarantee that there is no boxing/unboxing and lost of referencing when changing it's data. 
 	/// </summary>
-	public interface IDataService : IDataProvider, IDataWriter, IDataLoader
+	public interface IDataService : IDataProvider, IDataSaver, IDataLoader
 	{
+		/// <summary>
+		/// Adds the given <paramref name="data"/> to this logic state to be maintained in memory
+		/// </summary>
+		void AddData<T>(T data) where T : class;
 	}
 
 	/// <inheritdoc />
@@ -70,13 +69,7 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public void AddData<T>(T data) where T : class
-		{
-			_data.Add(typeof(T), data);
-		}
-
-		/// <inheritdoc />
-		public void FlushData<T>() where T : class
+		public void SaveData<T>() where T : class
 		{
 			var type = typeof(T);
 			
@@ -85,7 +78,7 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public void FlushAllData()
+		public void SaveAllData()
 		{
 			foreach (var data in _data)
 			{
@@ -102,6 +95,12 @@ namespace GameLovers.Services
 			var instance = string.IsNullOrEmpty(json) ? Activator.CreateInstance<T>() : JsonConvert.DeserializeObject<T>(json);
 			
 			AddData(instance);
+		}
+
+		/// <inheritdoc />
+		public void AddData<T>(T data) where T : class
+		{
+			_data.Add(typeof(T), data);
 		}
 	}
 }
