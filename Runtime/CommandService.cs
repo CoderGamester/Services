@@ -3,44 +3,45 @@
 namespace GameLovers.Services
 {
 	/// <summary>
-	/// Interface representing the command to be executed in the <see cref="ICommandService{T}"/>
+	/// Interface representing the command to be executed in the <see cref="ICommandService{TGameLogic}"/>.
 	/// Implement this interface with the proper command logic
 	/// </summary>
 	/// <remarks>
 	/// Follows the Command pattern <see cref="https://en.wikipedia.org/wiki/Command_pattern"/>
 	/// </remarks>
-	public interface IGameCommand<in T> where T : class
+	public interface IGameCommand<in TGameLogic> where TGameLogic : class
 	{
 		/// <summary>
 		/// Executes the command logic
 		/// </summary>
-		void Execute(T gameLogic);
+		void Execute(TGameLogic gameLogic);
 	}
 	
 	/// <summary>
-	/// This service provides the possibility to execute a <see cref="IGameCommand{T}"/>
+	/// This service provides the possibility to execute a <see cref="IGameCommand{TGameLogic}"/>.
+	/// It allows to create an seamless abstraction layer of execution between the game logic and any other part of the code 
 	/// </summary>
-	public interface ICommandService<out T> where T : class
+	public interface ICommandService<out TGameLogic> where TGameLogic : class
 	{
 		/// <summary>
 		/// Executes the <paramref name="command"/>
 		/// The command execution is done atomically
 		/// </summary>
-		void ExecuteCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommand<T>;
+		void ExecuteCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommand<TGameLogic>;
 	}
 	
 	/// <inheritdoc />
-	public class CommandService<T> : ICommandService<T> where T : class
+	public class CommandService<TGameLogic> : ICommandService<TGameLogic> where TGameLogic : class
 	{
-		private readonly T _gameLogic;
+		private readonly TGameLogic _gameLogic;
 		
-		public CommandService(T gameLogic)
+		public CommandService(TGameLogic gameLogic)
 		{
 			_gameLogic = gameLogic;
 		}
 		
 		/// <inheritdoc />
-		public void ExecuteCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommand<T>
+		public void ExecuteCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommand<TGameLogic>
 		{
 			command.Execute(_gameLogic);
 		}
