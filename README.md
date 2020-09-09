@@ -2,6 +2,10 @@
 
 The purpose of this package is to provide a set of services to ease the development of a basic game architecture.
 
+## System Requirements
+
+- [Unity](http://unity3d.com/) 2019.4 or higher. Feel free to try older version.
+
 ## Service List
 
 The services provided by this package are:
@@ -15,10 +19,6 @@ The services provided by this package are:
 - [PoolService](#PoolService) - to control all object pools by type and allows to create independent self management object pools
 - [TickService](#TickService) - to provide a single control point on Unity update cycle
 - [TimeService](#TimeService) - to provide a precise control on the game's time (Unix, Unity or DateTime)
-
-# System Requirements
-
-- [Unity](http://unity3d.com/) 2019.4 or higher. Feel free to try older version.
 
 ## Package Structure
 
