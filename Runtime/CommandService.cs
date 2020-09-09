@@ -3,13 +3,18 @@
 namespace GameLovers.Services
 {
 	/// <summary>
+	/// Tags the interface as a <see cref="IGameCommand{TGameLogic}"/>
+	/// </summary>
+	public interface IGameCommandBase {}
+	
+	/// <summary>
 	/// Interface representing the command to be executed in the <see cref="ICommandService{TGameLogic}"/>.
 	/// Implement this interface with the proper command logic
 	/// </summary>
 	/// <remarks>
 	/// Follows the Command pattern <see cref="https://en.wikipedia.org/wiki/Command_pattern"/>
 	/// </remarks>
-	public interface IGameCommand<in TGameLogic> where TGameLogic : class
+	public interface IGameCommand<in TGameLogic> : IGameCommandBase where TGameLogic : class
 	{
 		/// <summary>
 		/// Executes the command logic
@@ -34,15 +39,18 @@ namespace GameLovers.Services
 	public class CommandService<TGameLogic> : ICommandService<TGameLogic> where TGameLogic : class
 	{
 		private readonly TGameLogic _gameLogic;
+		private readonly ICommandNetworkService _networkService;
 		
-		public CommandService(TGameLogic gameLogic)
+		public CommandService(TGameLogic gameLogic, ICommandNetworkService networkService)
 		{
 			_gameLogic = gameLogic;
+			_networkService = networkService;
 		}
 		
 		/// <inheritdoc />
 		public void ExecuteCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommand<TGameLogic>
 		{
+			_networkService.SendCommand(command);
 			command.Execute(_gameLogic);
 		}
 	}

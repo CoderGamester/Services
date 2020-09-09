@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 // ReSharper disable once CheckNamespace
 
@@ -26,18 +25,20 @@ namespace GameLovers.Services
 	{
 	}
 
-	/// <inheritdoc />
-	internal interface IInternalNetworkService : INetworkService
+	/// <summary>
+	/// This interface provides the contract to relay <see cref="IGameCommandBase"/> to the game server
+	/// </summary>
+	public interface ICommandNetworkService
 	{
 		/// <summary>
 		/// Sends the given <paramref name="command"/> to be executed in the server.
 		/// The command execution is done atomically
 		/// </summary>
-		void SendCommand<TCommand>(TCommand command) where TCommand : struct;
+		void SendCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommandBase;
 	}
 	
-	/// <inheritdoc />
-	public class NetworkService : IInternalNetworkService
+	/// <inheritdoc cref="INetworkService"/>
+	public class NetworkService : INetworkService, ICommandNetworkService
 	{
 		private readonly INetworkLayer _networkLayer;
 		
@@ -49,7 +50,7 @@ namespace GameLovers.Services
 		}
 		
 		/// <inheritdoc />
-		public void SendCommand<TCommand>(TCommand command) where TCommand : struct
+		public void SendCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommandBase
 		{
 			var type = typeof(TCommand);
 			var obj = command as object;
