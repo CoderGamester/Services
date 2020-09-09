@@ -24,7 +24,7 @@ namespace GameLovers.Services
 	public interface ICommandService<out TGameLogic> where TGameLogic : class
 	{
 		/// <summary>
-		/// Executes the <paramref name="command"/>
+		/// Executes the given <paramref name="command"/>.
 		/// The command execution is done atomically
 		/// </summary>
 		void ExecuteCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommand<TGameLogic>;

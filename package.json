@@ -1,9 +1,9 @@
 {
   "name": "com.gamelovers.services",
   "displayName": "Services",
-  "version": "0.5.0",
-  "unity": "2019.3",
-  "description": "This package contains a set of services to ease the development of a basic game architecture. The services provided by this package are:\n\n- CommandService to create an seamless abstraction layer of execution between the game logic and any other part of the code by invoking commands\n- CoroutineService to have a long life object to control all coroutines with an end callback\n- DataService to help loading and saving persistent game Data\n- PoolService to control all object pools by type\n- MessageBrokerService to help decoupled modules/systems to communicate with each other while maintaining the inversion of control principle\n- TimeService to have a precise control on the game's time (Unix, Unity or DateTime)\n- TickService to have a single control point on Unity update cycle\n- MainInstaller to have a simple dependency injection binding installer",
+  "version": "0.6.0",
+  "unity": "2019.4",
+  "description": "The purpose of this package is to provide a set of services to ease the development of a basic game architecture",
   "type": "library",
   "hideInEditor": false
 }
