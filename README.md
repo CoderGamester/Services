@@ -6,6 +6,19 @@ The purpose of this package is to provide a set of services to ease the developm
 
 - [Unity](http://unity3d.com/) 2019.4 or higher. Feel free to try older version.
 
+## Installation
+
+To install this project as a [Git dependency](https://docs.unity3d.com/Manual/upm-git.html) using the Unity Package Manager,
+add the following line to your project's `manifest.json`:
+
+```
+"com.gamelovers.services": "https://github.com/CoderGamester/com.gamelovers.services.git"
+```
+
+You will need to have Git installed and available in your system's PATH.
+
+It is also possible to just add a package via the *Package Manager* window inside Unity via git url: `https://github.com/CoderGamester/com.gamelovers.services.git`
+
 ## Service List
 
 The services provided by this package are:
@@ -43,6 +56,7 @@ The services provided by this package are:
       │   ├── GameLovers.Services.Editor.Tests.asmdef
       │   ├── CommandServiceTest.cs
       │   ├── DataServiceTest.cs
+      │   ├── IntegrationTest.cs
       │   ├── MainInstallerTest.cs
       │   ├── MessageBrokerServiceTest.cs
       │   ├── NetworkServiceTest.cs
@@ -135,3 +149,6 @@ Provides a precise control on the game's time (Unix, Unity or DateTime)
 ```csharp
 // Example TODO
 ```
+
+## License
+[MIT](LICENSE.md)

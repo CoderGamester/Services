@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2020-09-10
+
+- Made *NetworkService* abstract and removed *INetworkService* to make easier to work with
+- Improved Readme documentation
+
 ## [0.6.1] - 2020-09-09
 
 - Added connection between *NetworkService* & *CommandService*

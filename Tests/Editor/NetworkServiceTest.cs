@@ -11,29 +11,42 @@ namespace GameLoversEditor.Services.Tests
 	public class NetworkServiceTest
 	{
 		private NetworkService _networkService;
-		private INetworkLayer _networkLayerMockup;
+		private ICallMockup _callMockup;
 
-		// ReSharper disable once MemberCanBePrivate.Global
-		public interface IGameLogicMockup
-		{
-			void CallMockup(int payload);
-		}
-
+		private interface IGameLogicMockup { }
 		private struct CommandMockup : IGameCommand<IGameLogicMockup>
 		{
 			public int Payload;
 			
-			public void Execute(IGameLogicMockup gameLogic)
+			public void Execute(IGameLogicMockup gameLogic) { }
+		}
+
+		// ReSharper disable once MemberCanBePrivate.Global
+		public interface ICallMockup
+		{
+			void SendMessageRequestMockCall(string name, IDictionary<string, object> payload);
+		}
+
+		private class GameNetworkService : NetworkService
+		{
+			private readonly ICallMockup _callMockup;
+
+			public GameNetworkService(ICallMockup callMockup)
 			{
-				gameLogic.CallMockup(Payload);
+				_callMockup = callMockup;
+			}	
+			
+			protected override void SendMessageRequest(string name, IDictionary<string, object> payload)
+			{
+				_callMockup.SendMessageRequestMockCall(name, payload);
 			}
 		}
 
 		[SetUp]
 		public void Init()
 		{
-			_networkLayerMockup = Substitute.For<INetworkLayer>();
-			_networkService = new NetworkService(_networkLayerMockup);
+			_callMockup = Substitute.For<ICallMockup>();
+			_networkService = new GameNetworkService(_callMockup);
 		}
 
 		[Test]
@@ -42,10 +55,9 @@ namespace GameLoversEditor.Services.Tests
 			var payload = 1;
 			
 			_networkService.SendCommand(new CommandMockup { Payload = payload });
-
-			_networkLayerMockup.Received()
-			                   .SendMessageRequest(Arg.Is(nameof(CommandMockup)), 
-			                                       Arg.Is<IDictionary<string, object>>(dic => (int) dic[nameof(CommandMockup.Payload)] == payload));
+			
+			_callMockup.Received().SendMessageRequestMockCall(Arg.Is(nameof(CommandMockup)), 
+			                                                  Arg.Is<IDictionary<string, object>>(dic => (int) dic[nameof(CommandMockup.Payload)] == payload));
 		}
 	}
 }
