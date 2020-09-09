@@ -5,18 +5,6 @@ using System.Collections.Generic;
 namespace GameLovers.Services
 {
 	/// <summary>
-	/// This interface provides the contract to define the communication layer between the game and the game server running online.
-	/// This interface should be implemented based on the project needs.
-	/// </summary>
-	public interface INetworkLayer
-	{
-		/// <summary>
-		/// Sends a message through the network with the given <paramref name="name"/> and given p<paramref name="payload"/>
-		/// </summary>
-		void SendMessageRequest(string name, IDictionary<string, object> payload);
-	}
-	
-	/// <summary>
 	/// This service provides the possibility to process any network code or to relay backend logic code to a game server
 	/// running online.
 	/// It gives the possibility to have the desired behaviour for a game to run online.
@@ -38,16 +26,9 @@ namespace GameLovers.Services
 	}
 	
 	/// <inheritdoc cref="INetworkService"/>
-	public class NetworkService : INetworkService, ICommandNetworkService
+	public abstract class NetworkService : INetworkService, ICommandNetworkService
 	{
-		private readonly INetworkLayer _networkLayer;
-		
-		private NetworkService() {}
-		
-		public NetworkService(INetworkLayer networkLayer)
-		{
-			_networkLayer = networkLayer;
-		}
+		protected NetworkService() {}
 		
 		/// <inheritdoc />
 		public void SendCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommandBase
@@ -68,7 +49,12 @@ namespace GameLovers.Services
 				dictionary.Add(propertyInfo.Name, propertyInfo.GetValue(obj));
 			}
 			
-			_networkLayer.SendMessageRequest(type.Name, dictionary);
+			SendMessageRequest(type.Name, dictionary);
 		}
+		
+		/// <summary>
+		/// Sends a message through the network with the given <paramref name="name"/> and given <paramref name="payload"/>
+		/// </summary>
+		protected abstract void SendMessageRequest(string name, IDictionary<string, object> payload);
 	}
 }

@@ -1,7 +1,7 @@
 {
   "name": "com.gamelovers.services",
   "displayName": "Services",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "unity": "2019.4",
   "description": "The purpose of this package is to provide a set of services to ease the development of a basic game architecture",
   "type": "library",
