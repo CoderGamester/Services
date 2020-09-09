@@ -13,7 +13,6 @@ namespace GameLoversEditor.Services.Tests
 	{
 		private PoolService _poolService;
 		private IObjectPool<PoolableEntity> _pool;
-		private int initialSize = 5;
 
 		public class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn
 		{

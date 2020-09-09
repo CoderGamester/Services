@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.5.0] - 2020-07-10
 
+- Added *NetworkService*
+- Improved Readme documentation
+
+## [0.5.0] - 2020-07-10
+
 **Changed**:
 - Renamed *IDataWriter* and it's *FlushData* methods to *IDataSaver* & *SaveData* respectively to match with it's execution logic scope
 - Moved the *AddData* to the *IDataService* to allow the *IDataSaver* have the single responsibility of saving data into disk  

@@ -40,9 +40,9 @@ namespace GameLovers.Services
 	public interface IDataLoader
 	{
 		/// <summary>
-		/// Loads the game's  given <typeparamref name="T"/> data from disk
+		/// Loads the game's  given <typeparamref name="T"/> data from disk and returns it
 		/// </summary>
-		void LoadData<T>() where T : class;
+		T LoadData<T>() where T : class;
 	}
 
 	/// <summary>
@@ -89,12 +89,14 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public void LoadData<T>() where T : class
+		public T LoadData<T>() where T : class
 		{
 			var json = PlayerPrefs.GetString(typeof(T).Name, "");
 			var instance = string.IsNullOrEmpty(json) ? Activator.CreateInstance<T>() : JsonConvert.DeserializeObject<T>(json);
 			
 			AddData(instance);
+
+			return instance;
 		}
 
 		/// <inheritdoc />
