@@ -149,3 +149,6 @@ Provides a precise control on the game's time (Unix, Unity or DateTime)
 ```csharp
 // Example TODO
 ```
+
+## License
+[MIT](LICENSE.md)
