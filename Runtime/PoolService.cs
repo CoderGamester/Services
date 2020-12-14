@@ -149,6 +149,11 @@ namespace GameLovers.Services
 	public interface IObjectPool<T> : IObjectPool
 	{
 		/// <summary>
+		/// Requests the collection of already spawned elements as a read only list
+		/// </summary>
+		IReadOnlyList<T> SpawnedReadOnly { get; }
+		
+		/// <summary>
 		/// Spawns and returns an entity of the given type <typeparamref name="T"/>
 		/// This function does not initialize the entity. For that, have the entity implement <see cref="IPoolEntitySpawn"/> or do it externally
 		/// This function throws a <exception cref="StackOverflowException" /> if the pool is empty
@@ -169,6 +174,9 @@ namespace GameLovers.Services
 		private readonly IList<T> _spawnedEntities = new List<T>();
 		private readonly Func<T, T> _instantiator;
 		private readonly T _sampleEntity;
+
+		/// <inheritdoc />
+		public IReadOnlyList<T> SpawnedReadOnly => _spawnedEntities as IReadOnlyList<T>;
 		
 		protected ObjectPoolBase(int initSize, T sampleEntity, Func<T, T> instantiator)
 		{
@@ -182,7 +190,7 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public T Spawn()
+		public virtual T Spawn()
 		{
 			var entity = _stack.Count == 0 ? _instantiator.Invoke(_sampleEntity) : _stack.Pop();
 			var poolEntity = entity as IPoolEntitySpawn;
@@ -194,7 +202,7 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public void Despawn(T entity)
+		public virtual void Despawn(T entity)
 		{
 			var poolEntity = entity as IPoolEntityDespawn;
 
@@ -204,7 +212,7 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public void DespawnAll()
+		public virtual void DespawnAll()
 		{
 			var entitiesCopy = new List<T>(_spawnedEntities);
 			foreach (var entity in entitiesCopy)
@@ -222,7 +230,9 @@ namespace GameLovers.Services
 		public ObjectPool(int initSize, Func<T> instantiator) : base(initSize, instantiator(), entityRef => instantiator.Invoke())
 		{
 		}
-	}/// <inheritdoc />
+	}
+	
+	/// <inheritdoc />
 	/// <remarks>
 	/// Useful to for pools that use object references to create new instances (ex: GameObjects)
 	/// </remarks>
@@ -241,6 +251,24 @@ namespace GameLovers.Services
 	{
 		public GameObjectPool(int initSize, T sampleEntity) : base(initSize, sampleEntity, Instantiator)
 		{
+		}
+
+		/// <inheritdoc />
+		public override T Spawn()
+		{
+			var entity = base.Spawn();
+			
+			entity.gameObject.SetActive(true);
+
+			return entity;
+		}
+
+		/// <inheritdoc />
+		public override void Despawn(T entity)
+		{
+			base.Despawn(entity);
+			
+			entity.gameObject.SetActive(false);
 		}
 
 		/// <summary>

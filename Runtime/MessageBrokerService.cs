@@ -58,7 +58,7 @@ namespace GameLovers.Services
 		/// <inheritdoc />
 		public void Publish<T>(T message) where T : IMessage
 		{
-			if (!_subscriptions.TryGetValue(typeof(T), out IDictionary<object, IList> subscriptionObjects))
+			if (!_subscriptions.TryGetValue(typeof(T), out var subscriptionObjects))
 			{
 				return;
 			}
@@ -67,12 +67,11 @@ namespace GameLovers.Services
 			
 			subscriptionObjects.Values.CopyTo(subscriptionCopy, 0);
 
-			for (int i = 0; i < subscriptionCopy.Length; i++)
+			for (var i = 0; i < subscriptionCopy.Length; i++)
 			{
-				IList subscription = subscriptionCopy[i];
-				List<Action<T>> actions = (List<Action<T>>) subscription;
+				var actions = (List<Action<T>>) subscriptionCopy[i];
 
-				for (int index = 0; index < actions.Count; index++)
+				for (var index = 0; index < actions.Count; index++)
 				{
 					actions[index](message);
 				}
@@ -82,15 +81,15 @@ namespace GameLovers.Services
 		/// <inheritdoc />
 		public void Subscribe<T>(Action<T> action) where T : IMessage
 		{
-			Type type = typeof(T);
-			object subscriber = action.Target;
+			var type = typeof(T);
+			var subscriber = action.Target;
 
 			if (subscriber == null)
 			{
 				throw new ArgumentException("Subscribe static functions to a message is not supported!");
 			}
 
-			if (!_subscriptions.TryGetValue(type, out IDictionary<object, IList> subscriptionObjects))
+			if (!_subscriptions.TryGetValue(type, out var subscriptionObjects))
 			{
 				subscriptionObjects = new Dictionary<object, IList>();
 				_subscriptions.Add(type, subscriptionObjects);
@@ -108,16 +107,16 @@ namespace GameLovers.Services
 		/// <inheritdoc />
 		public void Unsubscribe<T>(Action<T> action) where T : IMessage
 		{
-			Type type = typeof(T);
-			object subscriber = action.Target;
+			var type = typeof(T);
+			var subscriber = action.Target;
 
 			if (subscriber == null)
 			{
 				throw new ArgumentException("Subscribe static functions to a message is not supported!");
 			}
 
-			if (!_subscriptions.TryGetValue(type, out IDictionary<object, IList> subscriptionObjects) || 
-			    !subscriptionObjects.TryGetValue(subscriber, out IList actions))
+			if (!_subscriptions.TryGetValue(type, out var subscriptionObjects) || 
+			    !subscriptionObjects.TryGetValue(subscriber, out var actions))
 			{
 				return;
 			}
@@ -150,7 +149,7 @@ namespace GameLovers.Services
 				return;
 			}
 
-			foreach (IDictionary<object, IList> subscriptionObjects in _subscriptions.Values)
+			foreach (var subscriptionObjects in _subscriptions.Values)
 			{
 				if (subscriptionObjects.ContainsKey(subscriber))
 				{

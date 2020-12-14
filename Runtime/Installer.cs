@@ -6,23 +6,46 @@ using System.Collections.Generic;
 namespace GameLovers.Services
 {
 	/// <summary>
-	/// Main injector to use in the game
-	/// It only allows to bind interfaces
+	/// This marks the defined object to me a container of binding installers.
+	/// It acts as a locator for all the binded interfaces.
+	/// It only allows to bind interfaces.
 	/// </summary>
 	/// <remarks>
 	/// Follows the "Inversion of Control" principle <see cref="https://en.wikipedia.org/wiki/Inversion_of_control"/>
 	/// </remarks>
-	public static class MainInstaller
+	public interface IInstaller
 	{
-		private static readonly Dictionary<Type, object> _bindings = new Dictionary<Type, object>();
-
 		/// <summary>
 		/// Binds the interface <typeparamref name="T"/> to the given <paramref name="instance"/>
 		/// </summary>
 		/// <exception cref="ArgumentException">
 		/// Thrown if the given <paramref name="instance"/> doesn't implement <typeparamref name="T"/> interface
 		/// </exception>
-		public static void Bind<T>(T instance) where T : class
+		void Bind<T>(T instance) where T : class;
+
+		/// <summary>
+		/// Requests the instance binded to the type <typeparamref name="T"/>
+		/// </summary>
+		/// <exception cref="ArgumentException">
+		/// Thrown if the given <typeparamref name="T"/> type was not yet binded
+		/// </exception>
+		T Resolve<T>();
+
+		/// <summary>
+		/// Cleans all the bindings of the installer
+		/// Useful in case of resetting the game state
+		/// </summary>
+		void Clean();
+	}
+	
+	
+	/// <inheritdoc />
+	public class Installer : IInstaller
+	{
+		private readonly Dictionary<Type, object> _bindings = new Dictionary<Type, object>();
+
+		/// <inheritdoc />
+		public void Bind<T>(T instance) where T : class
 		{
 			var type = typeof(T);
 
@@ -34,13 +57,8 @@ namespace GameLovers.Services
 			_bindings.Add(type, instance);
 		}
 
-		/// <summary>
-		/// Requests the instance binded to the type <typeparamref name="T"/>
-		/// </summary>
-		/// <exception cref="ArgumentException">
-		/// Thrown if the given <typeparamref name="T"/> type was not yet binded
-		/// </exception>
-		public static T Resolve<T>()
+		/// <inheritdoc />
+		public T Resolve<T>()
 		{
 			if (!_bindings.TryGetValue(typeof(T), out object instance))
 			{
@@ -50,11 +68,8 @@ namespace GameLovers.Services
 			return (T) instance;
 		}
 
-		/// <summary>
-		/// Cleans all the bindings of the installer
-		/// Useful in case of resetting the game state
-		/// </summary>
-		public static void Clean()
+		/// <inheritdoc />
+		public void Clean()
 		{
 			_bindings.Clear();
 		}
