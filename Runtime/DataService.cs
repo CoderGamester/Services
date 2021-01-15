@@ -40,7 +40,7 @@ namespace GameLovers.Services
 	public interface IDataLoader
 	{
 		/// <summary>
-		/// Loads the game's  given <typeparamref name="T"/> data from disk and returns it
+		/// Loads the game's given <typeparamref name="T"/> data from disk and returns it
 		/// </summary>
 		T LoadData<T>() where T : class;
 	}
@@ -52,29 +52,36 @@ namespace GameLovers.Services
 	public interface IDataService : IDataProvider, IDataSaver, IDataLoader
 	{
 		/// <summary>
-		/// Adds the given <paramref name="data"/> to this logic state to be maintained in memory
+		/// Adds the given <paramref name="data"/> to this logic state to be maintained in memory.
+		/// If <paramref name="isLocal"/> then the given <paramref name="data"/> will be saved on the device HD.
 		/// </summary>
-		void AddData<T>(T data) where T : class;
+		void AddData<T>(T data, bool isLocal = false) where T : class;
 	}
 
 	/// <inheritdoc />
 	public class DataService : IDataService
 	{
-		private readonly IDictionary<Type, object> _data = new Dictionary<Type, object>();
+		private readonly IDictionary<Type, DataInfo> _data = new Dictionary<Type, DataInfo>();
 		
 		/// <inheritdoc />
 		public T GetData<T>() where T : class
 		{
-			return _data[typeof(T)] as T;
+			return _data[typeof(T)].Data as T;
 		}
 
 		/// <inheritdoc />
 		public void SaveData<T>() where T : class
 		{
 			var type = typeof(T);
+
+			if (_data[type].IsLocal)
+			{
+				PlayerPrefs.SetString(type.Name, JsonConvert.SerializeObject(_data[type].Data));
+				PlayerPrefs.Save();
+				return;
+			}
 			
-			PlayerPrefs.SetString(type.Name, JsonConvert.SerializeObject(_data[type]));
-			PlayerPrefs.Save();
+			SaveOnline(_data[type].Data, type);
 		}
 
 		/// <inheritdoc />
@@ -82,7 +89,12 @@ namespace GameLovers.Services
 		{
 			foreach (var data in _data)
 			{
-				PlayerPrefs.SetString(data.Key.Name, JsonConvert.SerializeObject(data.Value));
+				if (data.Value.IsLocal)
+				{
+					PlayerPrefs.SetString(data.Key.Name, JsonConvert.SerializeObject(data.Value.Data));
+					continue;
+				}
+				SaveOnline(data.Value.Data, data.Key);
 			}
 			
 			PlayerPrefs.Save();
@@ -94,15 +106,25 @@ namespace GameLovers.Services
 			var json = PlayerPrefs.GetString(typeof(T).Name, "");
 			var instance = string.IsNullOrEmpty(json) ? Activator.CreateInstance<T>() : JsonConvert.DeserializeObject<T>(json);
 			
-			AddData(instance);
+			AddData(instance, true);
 
 			return instance;
 		}
 
 		/// <inheritdoc />
-		public void AddData<T>(T data) where T : class
+		public void AddData<T>(T data, bool isLocal = false) where T : class
 		{
-			_data.Add(typeof(T), data);
+			_data.Add(typeof(T), new DataInfo { Data = data, IsLocal = isLocal });
+		}
+
+		protected virtual void SaveOnline(object data, Type type)
+		{
+		}
+
+		private struct DataInfo
+		{
+			public object Data;
+			public bool IsLocal;
 		}
 	}
 }

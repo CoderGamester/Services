@@ -39,18 +39,15 @@ namespace GameLovers.Services
 	public class CommandService<TGameLogic> : ICommandService<TGameLogic> where TGameLogic : class
 	{
 		private readonly TGameLogic _gameLogic;
-		private readonly ICommandNetworkService _networkService;
 		
-		public CommandService(TGameLogic gameLogic, ICommandNetworkService networkService)
+		public CommandService(TGameLogic gameLogic)
 		{
 			_gameLogic = gameLogic;
-			_networkService = networkService;
 		}
 		
 		/// <inheritdoc />
 		public void ExecuteCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommand<TGameLogic>
 		{
-			_networkService.SendCommand(command);
 			command.Execute(_gameLogic);
 		}
 	}

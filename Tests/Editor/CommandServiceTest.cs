@@ -1,4 +1,4 @@
-using GameLovers.Services;
+using FirstLight.Services;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -11,7 +11,6 @@ namespace GameLoversEditor.Services.Tests
 	{
 		private CommandService<IGameLogicMockup> _commandService;
 		private IGameLogicMockup _gameLogicMockup;
-		private ICommandNetworkService _networkService;
 
 		// ReSharper disable once MemberCanBePrivate.Global
 		public interface IGameLogicMockup
@@ -33,8 +32,7 @@ namespace GameLoversEditor.Services.Tests
 		public void Init()
 		{
 			_gameLogicMockup = Substitute.For<IGameLogicMockup>();
-			_networkService = Substitute.For<ICommandNetworkService>();
-			_commandService = new CommandService<IGameLogicMockup>(_gameLogicMockup, _networkService);
+			_commandService = new CommandService<IGameLogicMockup>(_gameLogicMockup);
 		}
 
 		[Test]
@@ -46,7 +44,6 @@ namespace GameLoversEditor.Services.Tests
 			_commandService.ExecuteCommand(command);
 			
 			_gameLogicMockup.Received().CallMockup(Arg.Is(payload));
-			_networkService.Received().SendCommand(Arg.Is(command));
 		}
 	}
 }

@@ -170,7 +170,7 @@ namespace GameLovers.Services
 	/// <inheritdoc />
 	public abstract class ObjectPoolBase<T> : IObjectPool<T>
 	{
-		private readonly Stack<T> _stack = new Stack<T>();
+		private readonly Stack<T> _stack;
 		private readonly IList<T> _spawnedEntities = new List<T>();
 		private readonly Func<T, T> _instantiator;
 		private readonly T _sampleEntity;
@@ -182,7 +182,8 @@ namespace GameLovers.Services
 		{
 			_sampleEntity = sampleEntity;
 			_instantiator = instantiator;
-			
+			_stack = new Stack<T>(initSize);
+
 			for (var i = 0; i < initSize; i++)
 			{
 				_stack.Push(instantiator.Invoke(sampleEntity));
@@ -242,10 +243,52 @@ namespace GameLovers.Services
 		{
 		}
 	}
-
 	/// <inheritdoc />
 	/// <remarks>
 	/// Useful to for pools that use object references to create new <see cref="GameObject"/>
+	/// </remarks>
+	public class GameObjectPool : ObjectRefPool<GameObject>
+	{
+		public GameObjectPool(int initSize, GameObject sampleEntity) : base(initSize, sampleEntity, Instantiator)
+		{
+		}
+
+		/// <inheritdoc />
+		public override GameObject Spawn()
+		{
+			var entity = base.Spawn();
+			
+			entity.SetActive(true);
+
+			return entity;
+		}
+
+		/// <inheritdoc />
+		public override void Despawn(GameObject entity)
+		{
+			base.Despawn(entity);
+			
+			entity.SetActive(false);
+		}
+
+		/// <summary>
+		/// Generic instantiator for <see cref="GameObject"/> pools
+		/// </summary>
+		/// <param name="entityRef"></param>
+		/// <returns></returns>
+		public static GameObject Instantiator(GameObject entityRef)
+		{
+			var instance = Object.Instantiate(entityRef, entityRef.transform.parent, true);
+
+			instance.SetActive(false);
+
+			return instance;
+		}
+	}
+
+	/// <inheritdoc />
+	/// <remarks>
+	/// Useful to for pools that use object references to create new <see cref="GameObject"/> by their component reference
 	/// </remarks>
 	public class GameObjectPool<T> : ObjectRefPool<T> where T : MonoBehaviour
 	{
