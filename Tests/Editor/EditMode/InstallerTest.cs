@@ -1,5 +1,4 @@
 using System;
-using FirstLight.Services;
 using NUnit.Framework;
 
 // ReSharper disable once CheckNamespace
