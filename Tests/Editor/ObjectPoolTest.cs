@@ -12,7 +12,7 @@ namespace GameLoversEditor.Services.Tests
 	{
 		private ObjectPool<PoolableEntity> _pool;
 		private PoolableEntity _poolableEntity;
-		private int initialSize = 5;
+		private uint initialSize = 5;
 
 		public class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn
 		{

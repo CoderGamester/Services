@@ -24,12 +24,25 @@ namespace GameLovers.Services
 		void Bind<T>(T instance) where T : class;
 
 		/// <summary>
+		/// Tries requesting the instance binded to the type <typeparamref name="T"/>
+		/// Returns true if the instance is not binded yet 
+		/// </summary>
+		bool TryResolve<T>(out T instance);
+
+		/// <summary>
 		/// Requests the instance binded to the type <typeparamref name="T"/>
 		/// </summary>
 		/// <exception cref="ArgumentException">
 		/// Thrown if the given <typeparamref name="T"/> type was not yet binded
 		/// </exception>
 		T Resolve<T>();
+
+		/// <summary>
+		/// Cleans the binding of the given type <typeparamref name="T"/> from the installer
+		/// Useful in case of resetting the game state.
+		/// Returns TRUE if successfully cleaned the given type <typeparamref name="T"/>, FALSE otherwise
+		/// </summary>
+		bool Clean<T>() where T : class;
 
 		/// <summary>
 		/// Cleans all the bindings of the installer
@@ -58,6 +71,16 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
+		public bool TryResolve<T>(out T instance)
+		{
+			var ret = _bindings.TryGetValue(typeof(T), out object inst);
+
+			instance = (T)inst;
+
+			return ret;
+		}
+
+		/// <inheritdoc />
 		public T Resolve<T>()
 		{
 			if (!_bindings.TryGetValue(typeof(T), out object instance))
@@ -66,6 +89,12 @@ namespace GameLovers.Services
 			}
 
 			return (T) instance;
+		}
+
+		/// <inheritdoc />
+		public bool Clean<T>() where T : class
+		{
+			return _bindings.Remove(typeof(T));
 		}
 
 		/// <inheritdoc />
