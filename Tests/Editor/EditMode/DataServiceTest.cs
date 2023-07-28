@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using FirstLight.Services;
+using GameLovers.Services;
 using NSubstitute;
 using NUnit.Framework;
 

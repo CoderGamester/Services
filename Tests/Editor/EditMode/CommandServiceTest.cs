@@ -1,4 +1,4 @@
-using FirstLight.Services;
+using GameLovers.Services;
 using NSubstitute;
 using NUnit.Framework;
 
