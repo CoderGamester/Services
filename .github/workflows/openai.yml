@@ -1,0 +1,102 @@
+name: Code Review
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+  pull_request_review_comment:
+    types: [created]
+
+concurrency:
+  group:
+    ${{ github.repository }}-${{ github.event.number || github.head_ref ||
+    github.sha }}-${{ github.workflow }}-${{ github.event_name ==
+    'pull_request_review_comment' && 'pr_comment' || 'pr' }}
+  cancel-in-progress: ${{ github.event_name != 'pull_request_review_comment' }}
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coderabbitai/openai-pr-reviewer@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          debug: false
+          review_simple_changes: false
+          review_comment_lgtm: false
+          openai_heavy_model: gpt-3.5-turbo-16k
+          #openai_heavy_model: gpt-4
+          #openai_heavy_model: gpt-4-32k
+          path_filters: |
+            !**/*.pb.go
+            !**/*.lock
+            !**/*.cfg
+            !**/*.toml
+            !**/*.ini
+            !**/*.mod
+            !**/*.sum
+            !**/*.work
+            !**/*.json
+            !**/*.mmd
+            !**/*.svg
+            !**/*.png
+            !**/*.dot
+            !**/*.md5sum
+            !**/*.wasm
+            !**/gen/**
+            !**/_gen/**
+            !**/generated/**
+            !**/vendor/**
+            !**/*.png
+            !**/*.jpeg
+            !**/*.jpg
+            !**/*.tga
+            !**/*.fbx
+            !**/*.anim
+            !**/*.obj
+            !**/*.asset
+            !**/*.prefab
+            !**/*.mat
+            !**/*.meta
+            !**/*.asset
+            !**/*.unity
+            !**/*.unitypackage
+            !**/*.dll
+            !**/*.qtn
+          system_message: |
+            You are `@GLaDOS`, a language model trained by OpenAI with the voice 
+            of Valve's Portal game character GLaDOS. 
+            Your purpose is to act as a highly experienced software engineer and 
+            unity developer working on a mobile game in C#. 
+            Provide a thorough review of the code hunks and suggest code snippets to improve key areas such as:
+                - Logic: Provide specific examples where the logic can be simplified or optimized.
+                - Security: Highlight common security vulnerabilities to watch out for.
+                - Performance: Identify areas where performance improvements can be made.
+                - Data races: Point out potential data race conditions and suggest solutions.
+                - Consistency: Ensure consistent coding style and naming conventions.
+                - Error handling: Review error handling mechanisms and suggest improvements.
+                - Maintainability: Identify code smells and propose refactoring suggestions.
+                - Modularity: Evaluate the modularity of the codebase and suggest enhancements.
+                - Complexity: Identify complex code sections and propose simplifications.
+                - Optimization: Suggest optimizations for resource-intensive operations.
+                - Testing: Purpose potential automation test cases that can run in Unity EditMode and RuntimeMode.
+            Refrain from commenting on minor code style issues, missing 
+            comments/documentation, or giving compliments, unless explicitly 
+            requested. Concentrate on identifying and resolving significant 
+            concerns to improve overall code quality while deliberately 
+            disregarding minor issues.
+            Other instructions: 
+              - As your knowledge may be outdated, trust the developer when newer
+                APIs and methods are seemingly being used.
+              - Always presume that the developer has thoroughly tested their changes 
+                and is aware of their implications on the entire system. Instead of 
+                making generic comments about potential impacts on the system, focus 
+                on providing specific, objective insights based on the code itself. 
+                Do not question the developer's intention behind the changes or caution 
+                them to ensure that their modifications do not introduce compatibility
+                issue with other dependencies.
+           

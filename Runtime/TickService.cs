@@ -347,7 +347,7 @@ namespace GameLovers.Services
 				var index = i - (arrayCopy.Length - countBefore);
 				if (list.Count > index && tickData == list[index])
 				{
-					var overFlow = deltaTime % tickData.DeltaTime;
+					var overFlow = tickData.DeltaTime == 0 ? 0 : deltaTime % tickData.DeltaTime;
 
 					tickData.LastTickTime = tickData.TimeOverflowToNextTick ? time - overFlow : time;
 

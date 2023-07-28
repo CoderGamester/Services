@@ -1,6 +1,5 @@
-using System;
 using System.Collections.Generic;
-using GameLovers.Services;
+using FirstLight.Services;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -27,7 +26,7 @@ namespace GameLoversEditor.Services.Tests
 		{
 			var data = Substitute.For<IDataMockup>();
 			
-			_dataService.AddData(data);
+			_dataService.AddData(data, false);
 
 			Assert.AreSame(data, _dataService.GetData<IDataMockup>());
 		}

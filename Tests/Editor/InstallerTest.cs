@@ -1,29 +1,30 @@
 using System;
-using GameLovers.Services;
-using NSubstitute.Exceptions;
+using FirstLight.Services;
 using NUnit.Framework;
 
 // ReSharper disable once CheckNamespace
 
-namespace GameLoversEditor.Services.Tests
+namespace GameLovers.Services.Tests
 {
-	public class MainInstallerTest
+	public class InstallerTest
 	{
 		private interface IInterface {}
 		private class Implementation : IInterface {}
+
+		private Installer _installer;
 		
-		[TearDown]
-		public void CleanUp()
+		[SetUp]
+		public void Init()
 		{
-			MainInstaller.Clean();
+			_installer = new Installer();
 		}
 
 		[Test]
 		public void Bind_Resolve_Successfully()
 		{
-			MainInstaller.Bind<IInterface>(new Implementation());
+			_installer.Bind<IInterface>(new Implementation());
 			
-			var instance = MainInstaller.Resolve<IInterface>();
+			var instance = _installer.Resolve<IInterface>();
 			
 			Assert.IsNotNull(instance);
 			Assert.AreSame(typeof(Implementation), instance.GetType());
@@ -32,13 +33,13 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Bind_NotInterface_ThrowsException()
 		{
-			Assert.Throws<ArgumentException>(() => MainInstaller.Bind(new Implementation()));
+			Assert.Throws<ArgumentException>(() => _installer.Bind(new Implementation()));
 		}
 
 		[Test]
 		public void Resolve_NotBinded_ThrowsException()
 		{
-			Assert.Throws<ArgumentException>(() => MainInstaller.Resolve<IInterface>());
+			Assert.Throws<ArgumentException>(() => _installer.Resolve<IInterface>());
 		}
 	}
 }

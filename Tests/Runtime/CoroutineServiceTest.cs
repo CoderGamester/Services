@@ -2,7 +2,6 @@ using System.Collections;
 using GameLovers.Services;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 // ReSharper disable once CheckNamespace
@@ -13,7 +12,6 @@ namespace GameLoversEditor.Services.Tests
 	{
 		private CoroutineService _coroutineService;
 		private int _testValue;
-		private Scene _testScene;
 
 		private IEnumerator TestCoroutine(int value)
 		{
