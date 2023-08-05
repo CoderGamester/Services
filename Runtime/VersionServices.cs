@@ -61,24 +61,32 @@ namespace GameLovers
 		/// </summary>
 		public static async Task LoadVersionDataAsync()
 		{
-			var source = new TaskCompletionSource<TextAsset>();
-			var request = Resources.LoadAsync<TextAsset>(VersionDataFilename);
-
-			request.completed += operation => source.SetResult(request.asset as TextAsset);
-
-			var textAsset = await source.Task;
-
-			if (!textAsset)
+			try
 			{
-				Debug.LogError("Could not async load version data from Resources.");
-				_loaded = false;
-				return;
+				var source = new TaskCompletionSource<TextAsset>();
+				var request = Resources.LoadAsync<TextAsset>(VersionDataFilename);
+
+				request.completed += operation => source.SetResult(request.asset as TextAsset);
+
+				var textAsset = await source.Task;
+
+				if (!textAsset)
+				{
+					Debug.LogError("Could not async load version data from Resources.");
+					_loaded = false;
+					return;
+				}
+
+				_versionData = JsonUtility.FromJson<VersionData>(textAsset.text);
+				_loaded = true;
+
+				Resources.UnloadAsset(textAsset);
 			}
-
-			_versionData = JsonUtility.FromJson<VersionData>(textAsset.text);
-			_loaded = true;
-
-			Resources.UnloadAsset(textAsset);
+			catch (Exception e)
+			{
+				Debug.LogError($"Error loading version data: {e.Message}");
+				_loaded = false;
+			}
 		}
 
 		/// <summary>
