@@ -1,9 +1,14 @@
 {
   "name": "com.gamelovers.services",
   "displayName": "Services",
-  "version": "0.7.1",
-  "unity": "2019.4",
+  "author": "Miguel Tomas",
+  "version": "0.8.0",
+  "unity": "2021.4",
+  "license": "MIT",
   "description": "The purpose of this package is to provide a set of services to ease the development of a basic game architecture",
   "type": "library",
-  "hideInEditor": false
+  "hideInEditor": false,
+  "dependencies": {
+    "com.gamelovers.dataextensions": "0.5.0"
+  }
 }
