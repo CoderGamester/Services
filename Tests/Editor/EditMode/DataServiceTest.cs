@@ -26,8 +26,21 @@ namespace GameLoversEditor.Services.Tests
 		{
 			var data = Substitute.For<IDataMockup>();
 			
-			_dataService.AddData(data, false);
+			_dataService.AddOrReplaceData(data);
 
+			Assert.AreSame(data, _dataService.GetData<IDataMockup>());
+		}
+
+		[Test]
+		public void ReplaceData_Successfully()
+		{
+			var data = Substitute.For<IDataMockup>();
+			var data1 = new object();
+
+			_dataService.AddOrReplaceData(data1);
+			_dataService.AddOrReplaceData(data);
+
+			Assert.AreNotSame(data1, _dataService.GetData<IDataMockup>());
 			Assert.AreSame(data, _dataService.GetData<IDataMockup>());
 		}
 

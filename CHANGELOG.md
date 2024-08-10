@@ -4,6 +4,52 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2024-08-10
+
+- Updated interfaces and classes related to data services, enhancing modularity and improving version handling.
+- Added classes for Git commands, version management, and random number generation.
+
+**Changed**:
+- Restructured the data service interfaces, consolidating functionality into a single IDataService interface and removing unnecessary interfaces.
+- Changed AddData to AddOrReplaceData in the DataService implementation.
+- Removed the isLocal state from data handling.
+
+## [0.8.1] - 2023-08-27
+
+- Added GitEditorProcess class to run Git commands as processes, enabling checks for valid Git repositories, retrieving current branch names, commit hashes, and diffs from given commits.
+- Introduced VersionEditorUtils class for managing application versioning. This includes setting and saving the internal version before building, loading version data from disk, and generating an internal version suffix based on Git information and build settings.
+
+**Changed**:
+- Enhanced IInstaller interface with new methods for binding multiple type interfaces to a single instance, improving modularity and code organization.
+
+## [0.8.0] - 2023-08-05
+
+- Introduced MainInstaller, a singleton class for managing instances in the project.
+- Added RngService for generating and managing random numbers.
+- Implemented VersionServices to manage application version, including asynchronous loading of version data and comparison of version strings.
+
+## [0.7.1] - 2023-07-28
+
+**Fixed**:
+- Compilation errors in various test files and the PoolService class have been fixed.
+
+**Changed**:
+- Tests have been moved to proper folders, and the package number has been updated.
+- An unused namespace import has been removed from the InstallerTest class.
+
+## [0.7.0] - 2023-07-28
+
+- Introduced a code review process using GitHub Actions workflow.
+- Added IInstaller interface and Installer implementation for binding and resolving instances.
+- Updated namespaces, removed unused code, and modified method calls in test classes.
+
+**Changed**:
+- Removed dependency on ICommandNetworkService and SendCommand method in CommandService.
+- Updated IDataService interface and DataService class to handle local and online data saving.
+- Improved readability of MessageBrokerService class by using var for type inference.
+- Removed unused network service related interfaces, classes, and methods.
+- Modified calculation of overFlow in TickService to check for zero DeltaTime.
+
 ## [0.6.2] - 2020-09-10
 
 - Made *NetworkService* abstract and removed *INetworkService* to make easier to work with

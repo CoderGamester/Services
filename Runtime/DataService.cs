@@ -16,57 +16,55 @@ namespace GameLovers.Services
 		/// Requests the player's data of <typeparamref name="T"/> type
 		/// </summary>
 		T GetData<T>() where T : class;
-	}
-	
-	/// <summary>
-	/// This interface provides the possibility to the current memory data to disk
-	/// </summary>
-	public interface IDataSaver
-	{
-		/// <summary>
-		/// Saves the game's given <typeparamref name="T"/> data to disk
-		/// </summary>
-		void SaveData<T>() where T : class;
-		
-		/// <summary>
-		/// Saves all game's data to disk
-		/// </summary>
-		void SaveAllData();
-	}
 
-	/// <summary>
-	/// This interface provides the possibility to load data from disk
-	/// </summary>
-	public interface IDataLoader
-	{
 		/// <summary>
-		/// Loads the game's given <typeparamref name="T"/> data from disk and returns it
+		/// Requests if the service has the given player's data of <typeparamref name="T"/> type
 		/// </summary>
-		T LoadData<T>() where T : class;
+		bool HasData<T>() where T : class;
 	}
 
 	/// <summary>
 	/// This service allows to manage all the persistent data in the game.
 	/// Data are strictly reference types to guarantee that there is no boxing/unboxing and lost of referencing when changing it's data. 
 	/// </summary>
-	public interface IDataService : IDataProvider, IDataSaver, IDataLoader
+	public interface IDataService : IDataProvider
 	{
 		/// <summary>
-		/// Adds the given <paramref name="data"/> to this logic state to be maintained in memory.
-		/// If <paramref name="isLocal"/> then the given <paramref name="data"/> will be saved on the device HD.
+		/// Saves the game's given <typeparamref name="T"/> data to disk
 		/// </summary>
-		void AddData<T>(T data, bool isLocal = false) where T : class;
+		void SaveData<T>() where T : class;
+
+		/// <summary>
+		/// Saves all game's data to disk
+		/// </summary>
+		void SaveAllData();
+
+		/// <summary>
+		/// Loads the game's given <typeparamref name="T"/> data from disk and returns it
+		/// </summary>
+		T LoadData<T>() where T : class;
+
+		/// <summary>
+		/// Adds or replaces the given <paramref name="data"/> to be maintained in memory.
+		/// </summary>
+		void AddOrReplaceData<T>(T data) where T : class;
 	}
 
 	/// <inheritdoc />
 	public class DataService : IDataService
 	{
-		private readonly IDictionary<Type, DataInfo> _data = new Dictionary<Type, DataInfo>();
-		
+		private readonly IDictionary<Type, object> _data = new Dictionary<Type, object>();
+
+		/// <inheritdoc />
+		public bool HasData<T>() where T : class
+		{
+			return _data.ContainsKey(typeof(T));
+		}
+
 		/// <inheritdoc />
 		public T GetData<T>() where T : class
 		{
-			return _data[typeof(T)].Data as T;
+			return _data[typeof(T)] as T;
 		}
 
 		/// <inheritdoc />
@@ -74,14 +72,9 @@ namespace GameLovers.Services
 		{
 			var type = typeof(T);
 
-			if (_data[type].IsLocal)
-			{
-				PlayerPrefs.SetString(type.Name, JsonConvert.SerializeObject(_data[type].Data));
-				PlayerPrefs.Save();
-				return;
-			}
-			
-			SaveOnline(_data[type].Data, type);
+			PlayerPrefs.SetString(type.Name, JsonConvert.SerializeObject(_data[type]));
+			PlayerPrefs.Save();
+			OnDataSaved(type.Name, _data[type], type);
 		}
 
 		/// <inheritdoc />
@@ -89,12 +82,8 @@ namespace GameLovers.Services
 		{
 			foreach (var data in _data)
 			{
-				if (data.Value.IsLocal)
-				{
-					PlayerPrefs.SetString(data.Key.Name, JsonConvert.SerializeObject(data.Value.Data));
-					continue;
-				}
-				SaveOnline(data.Value.Data, data.Key);
+				PlayerPrefs.SetString(data.Key.Name, JsonConvert.SerializeObject(data.Value));
+				OnDataSaved(data.Key.Name, data.Value, data.Key);
 			}
 			
 			PlayerPrefs.Save();
@@ -105,26 +94,27 @@ namespace GameLovers.Services
 		{
 			var json = PlayerPrefs.GetString(typeof(T).Name, "");
 			var instance = string.IsNullOrEmpty(json) ? Activator.CreateInstance<T>() : JsonConvert.DeserializeObject<T>(json);
-			
-			AddData(instance, true);
+
+			AddOrReplaceData(instance);
 
 			return instance;
 		}
 
 		/// <inheritdoc />
-		public void AddData<T>(T data, bool isLocal = false) where T : class
+		public void AddOrReplaceData<T>(T data) where T : class
 		{
-			_data.Add(typeof(T), new DataInfo { Data = data, IsLocal = isLocal });
+			if(HasData<T>())
+			{
+				_data[typeof(T)] = data;
+			}
+			else
+			{
+				_data.Add(typeof(T), data);
+			}
 		}
 
-		protected virtual void SaveOnline(object data, Type type)
+		protected virtual void OnDataSaved(string key, object data, Type type)
 		{
-		}
-
-		private struct DataInfo
-		{
-			public object Data;
-			public bool IsLocal;
 		}
 	}
 }
