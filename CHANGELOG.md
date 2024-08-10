@@ -6,7 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.9.0] - 2024-08-10
 
+- Updated interfaces and classes related to data services, enhancing modularity and improving version handling.
+- Added classes for Git commands, version management, and random number generation.
+
 **Changed**:
+- Restructured the data service interfaces, consolidating functionality into a single IDataService interface and removing unnecessary interfaces.
+- Changed AddData to AddOrReplaceData in the DataService implementation.
+- Removed the isLocal state from data handling.
 
 ## [0.8.1] - 2023-08-27
 
