@@ -1,5 +1,6 @@
 {
     "name": "GameLovers.Services.Editor.Tests",
+    "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
