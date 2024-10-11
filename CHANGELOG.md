@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2024-10-11
+
+- Updated CommandService to allow non struct type commands to be executed for reference type commands
+- Added Spawn<T>(T data) method to pool object to allow spawning new objects with defined spawning data
+
 ## [0.9.0] - 2024-08-10
 
 - Updated interfaces and classes related to data services, enhancing modularity and improving version handling.

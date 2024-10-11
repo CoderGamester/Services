@@ -12,19 +12,15 @@ namespace GameLoversEditor.Services.Tests
 	public class PoolServiceTest
 	{
 		private PoolService _poolService;
-		private IObjectPool<PoolableEntity> _pool;
+		private IObjectPool<IMockPoolableEntity> _pool;
 
-		public class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn
-		{
-			public void OnSpawn() {}
-			public void OnDespawn() {}
-		}
+		public interface IMockPoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn { }
 
 		[SetUp]
 		public void Init()
 		{
 			_poolService = new PoolService();
-			_pool = Substitute.For<IObjectPool<PoolableEntity>>();
+			_pool = Substitute.For<IObjectPool<IMockPoolableEntity>>();
 			
 			_poolService.AddPool(_pool);
 		}
@@ -32,7 +28,7 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void AddPool_Successfully()
 		{
-			Assert.True(_poolService.HasPool<PoolableEntity>());
+			Assert.True(_poolService.HasPool<IMockPoolableEntity>());
 		}
 
 		[Test]
@@ -44,11 +40,11 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Spawn_Successfully()
 		{
-			var entity = Substitute.For<PoolableEntity>();
+			var entity = Substitute.For<IMockPoolableEntity>();
 
 			_pool.Spawn().Returns(entity);
 			
-			Assert.AreEqual(entity,_poolService.Spawn<PoolableEntity>());
+			Assert.AreEqual(entity,_poolService.Spawn<IMockPoolableEntity>());
 
 			_pool.Received().Spawn();
 		}
@@ -58,13 +54,13 @@ namespace GameLoversEditor.Services.Tests
 		{
 			_poolService = new PoolService();
 			
-			Assert.Throws<ArgumentException>(() => _poolService.Spawn<PoolableEntity>());
+			Assert.Throws<ArgumentException>(() => _poolService.Spawn<IMockPoolableEntity>());
 		}
 
 		[Test]
 		public void Despawn_Successfully()
 		{
-			var entity = Substitute.For<PoolableEntity>();
+			var entity = Substitute.For<IMockPoolableEntity>();
 			
 			_poolService.Despawn(entity);
 			
@@ -74,7 +70,7 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Despawn_NotAddedPool_ThrowsException()
 		{
-			var entity = Substitute.For<PoolableEntity>();
+			var entity = Substitute.For<IMockPoolableEntity>();
 			
 			_poolService = new PoolService();
 			
@@ -84,7 +80,7 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void DespawnAll_Successfully()
 		{
-			_poolService.DespawnAll<PoolableEntity>();
+			_poolService.DespawnAll<IMockPoolableEntity>();
 
 			_pool.Received().DespawnAll();
 		}
@@ -92,9 +88,9 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void RemovePool_Successfully()
 		{
-			_poolService.RemovePool<PoolableEntity>();
+			_poolService.RemovePool<IMockPoolableEntity>();
 				
-			Assert.False(_poolService.HasPool<PoolableEntity>());
+			Assert.False(_poolService.HasPool<IMockPoolableEntity>());
 		}
 
 		[Test]
@@ -102,7 +98,7 @@ namespace GameLoversEditor.Services.Tests
 		{
 			_poolService = new PoolService();
 			
-			Assert.DoesNotThrow(() => _poolService.RemovePool<PoolableEntity>());
+			Assert.DoesNotThrow(() => _poolService.RemovePool<IMockPoolableEntity>());
 		}
 	}
 }

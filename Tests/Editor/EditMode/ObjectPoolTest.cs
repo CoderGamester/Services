@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using GameLovers.Services;
 using NSubstitute;
 using NUnit.Framework;
@@ -10,21 +11,17 @@ namespace GameLoversEditor.Services.Tests
 {
 	public class ObjectPoolTest
 	{
-		private ObjectPool<PoolableEntity> _pool;
-		private PoolableEntity _poolableEntity;
-		private uint initialSize = 5;
+		private ObjectPool<IMockEntity> _pool;
+		private IMockEntity _mockEntity;
+		private uint _initialSize = 5;
 
-		public class PoolableEntity : IPoolEntitySpawn, IPoolEntityDespawn
-		{
-			public void OnSpawn() {}
-			public void OnDespawn() {}
-		}
+		public interface IMockEntity : IPoolEntitySpawn, IPoolEntityDespawn, IPoolEntityObject<object>, IPoolEntitySpawn<object> { }
 
 		[SetUp]
 		public void Init()
 		{
-			_pool = new ObjectPool<PoolableEntity>(initialSize, () => Substitute.For<PoolableEntity>());
-			_poolableEntity = Substitute.For<PoolableEntity>();
+			_mockEntity = Substitute.For<IMockEntity>();
+			_pool = new ObjectPool<IMockEntity>(_initialSize, () => _mockEntity);
 		}
 
 		[Test]
@@ -34,45 +31,65 @@ namespace GameLoversEditor.Services.Tests
 			
 			newEntity.Received().OnSpawn();
 			
-			Assert.AreNotSame(_poolableEntity, newEntity);
+			Assert.AreSame(_mockEntity, newEntity);
 		}
 
 		[Test]
-		public void Spawn_EmptyPool_Successfully()
+		public void Spawn_WithData_Successfully()
 		{
-			var pool = new ObjectPool<PoolableEntity>(initialSize, () => Substitute.For<PoolableEntity>());
-			
+			var obj = new object();
+			var newEntity = _pool.Spawn(obj);
+
+			newEntity.Received().OnSpawn(obj);
+
+			Assert.AreSame(_mockEntity, newEntity);
+		}
+
+		[Test]
+		public void Spawn_ZeroInitialSize_Successfully()
+		{
+			var pool = new ObjectPool<IMockEntity>(0, () => _mockEntity);
 			var newEntity = pool.Spawn();
-			
+
 			newEntity.Received().OnSpawn();
-			
-			Assert.AreNotSame(_poolableEntity, newEntity);
+
+			Assert.AreSame(_mockEntity, newEntity);
 		}
 
 		[Test]
 		public void Despawn_Successfully()
 		{
-			_pool.Despawn(_poolableEntity);
-			
-			_poolableEntity.Received().OnDespawn();
+			_pool.Spawn();
+
+			Assert.IsTrue(_pool.Despawn(_mockEntity));
+			_mockEntity.Received().OnDespawn();
+		}
+
+		[Test]
+		public void Despawn_NotSpawnedObject_ReturnsFalse()
+		{
+			Assert.IsFalse(_pool.Despawn(_mockEntity));
+			_mockEntity.DidNotReceive().OnDespawn();
 		}
 
 		[Test]
 		public void DespawnAll_Successfully()
 		{
-			var entities = new List<PoolableEntity>();
-
-			for (int i = 0; i < initialSize; i++)
-			{
-				entities.Add(_pool.Spawn());
-			}
+			var newEntity1 = _pool.Spawn();
+			var newEntity2 = _pool.Spawn();
 			
 			_pool.DespawnAll();
 
-			foreach (var entity in entities)
-			{
-				entity.Received().OnDespawn();
-			}
+			newEntity1.Received().OnDespawn();
+			newEntity2.Received().OnDespawn();
+		}
+
+		[Test]
+		public void Clear_Successfully()
+		{
+			var clearedEntities = _pool.Clear();
+
+			Assert.AreEqual(_initialSize, clearedEntities.Count);
 		}
 	}
 }

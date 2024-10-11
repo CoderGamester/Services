@@ -17,7 +17,7 @@ namespace GameLovers.Services
 	public interface IGameCommand<in TGameLogic> : IGameCommandBase where TGameLogic : class
 	{
 		/// <summary>
-		/// Executes the command logic
+		/// Executes the command logic defined by the implemention of this interface
 		/// </summary>
 		void Execute(TGameLogic gameLogic);
 	}
@@ -29,10 +29,13 @@ namespace GameLovers.Services
 	public interface ICommandService<out TGameLogic> where TGameLogic : class
 	{
 		/// <summary>
-		/// Executes the given <paramref name="command"/>.
-		/// The command execution is done atomically
+		/// Executes the given <paramref name="command"/>
 		/// </summary>
-		void ExecuteCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommand<TGameLogic>;
+		/// <remarks>
+		/// IMPORTANT: Defines the <paramref name="command"/> as a class object if logic execution is asynchronous.
+		/// Define as a struct if togic logic execution is non waitable.
+		/// </remarks>
+		void ExecuteCommand<TCommand>(TCommand command) where TCommand : IGameCommand<TGameLogic>;
 	}
 	
 	/// <inheritdoc />
@@ -46,7 +49,7 @@ namespace GameLovers.Services
 		}
 		
 		/// <inheritdoc />
-		public void ExecuteCommand<TCommand>(TCommand command) where TCommand : struct, IGameCommand<TGameLogic>
+		public void ExecuteCommand<TCommand>(TCommand command) where TCommand : IGameCommand<TGameLogic>
 		{
 			command.Execute(_gameLogic);
 		}
