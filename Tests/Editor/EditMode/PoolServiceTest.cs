@@ -26,9 +26,22 @@ namespace GameLoversEditor.Services.Tests
 		}
 
 		[Test]
+		public void TryGetPool_Successfully()
+		{
+			Assert.True(_poolService.TryGetPool<IMockPoolableEntity>(out var pool));
+			Assert.AreEqual(_pool, pool);
+		}
+
+		[Test]
+		public void GetPool_Successfully()
+		{
+			Assert.AreEqual(_pool, _poolService.GetPool<IMockPoolableEntity>());
+		}
+
+		[Test]
 		public void AddPool_Successfully()
 		{
-			Assert.True(_poolService.HasPool<IMockPoolableEntity>());
+			Assert.True(_poolService.TryGetPool<IMockPoolableEntity>(out _));
 		}
 
 		[Test]
@@ -89,8 +102,8 @@ namespace GameLoversEditor.Services.Tests
 		public void RemovePool_Successfully()
 		{
 			_poolService.RemovePool<IMockPoolableEntity>();
-				
-			Assert.False(_poolService.HasPool<IMockPoolableEntity>());
+
+			Assert.Throws<ArgumentException>(() => _poolService.GetPool<IMockPoolableEntity>());
 		}
 
 		[Test]
