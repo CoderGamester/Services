@@ -4,6 +4,15 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2024-10-19
+
+- Added Spawn<T>(T data) method to PoolService to allow spawning new objects with defined spawning data
+- Added GetPool<T>() && TryGetPool<T>() methods to PoolService to allow requesting the pool object maintained by the pool service.
+
+**Changed**:
+- Removed IsSpawned<T>() method from PoolService because is not a fundamental function and can now be accessed from the Pool requested from GetPool()
+- Now Spawn<T>(T data) also invokes OnSpawn() without data so objects that implement IPoolEntitySpawn have the entire behaviour lifecycle
+
 ## [0.10.0] - 2024-10-11
 
 - Updated CommandService to allow non struct type commands to be executed for reference type commands

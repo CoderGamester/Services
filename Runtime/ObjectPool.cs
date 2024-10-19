@@ -89,7 +89,7 @@ namespace GameLovers.Services
 		/// </summary>
 		void DespawnAll();
 	}
-	
+
 	/// <inheritdoc />
 	public interface IObjectPool<T> : IObjectPool where T : class
 	{
@@ -102,7 +102,7 @@ namespace GameLovers.Services
 		/// Checks if there is an entity in the bool that matches the given <paramref name="conditionCheck"/>
 		/// </summary>
 		bool IsSpawned(Func<T, bool> conditionCheck);
-		
+
 		/// <summary>
 		/// Spawns and returns an entity of the given type <typeparamref name="T"/>
 		/// This function does not initialize the entity. For that, have the entity implement <see cref="IPoolEntitySpawn"/>
@@ -127,7 +127,7 @@ namespace GameLovers.Services
 		/// Returns true if was able to despawn the entity back to the pool successfully, false otherwise
 		/// </summary>
 		bool Despawn(bool onlyFirst, Func<T, bool> entityGetter);
-		
+
 		/// <summary>
 		/// Despawns the given <paramref name="entity"/> and returns it back to the pool to be used again later.
 		/// This function does not reset the entity. For that, have the entity implement <see cref="IPoolEntityDespawn"/>
@@ -144,36 +144,36 @@ namespace GameLovers.Services
 	}
 
 	/// <inheritdoc />
-	public abstract class ObjectPoolBase<T> : IObjectPool<T>  where T : class
+	public abstract class ObjectPoolBase<T> : IObjectPool<T> where T : class
 	{
 		public readonly T SampleEntity;
-		
+
 		protected readonly IList<T> SpawnedEntities = new List<T>();
-		
+
 		private readonly Stack<T> _stack;
 		private readonly Func<T, T> _instantiator;
 
 		/// <inheritdoc />
 		public IReadOnlyList<T> SpawnedReadOnly => SpawnedEntities as IReadOnlyList<T>;
-		
+
 		protected ObjectPoolBase(uint initSize, T sampleEntity, Func<T, T> instantiator)
 		{
 			SampleEntity = sampleEntity;
 			_instantiator = instantiator;
-			_stack = new Stack<T>((int) initSize);
+			_stack = new Stack<T>((int)initSize);
 
 			for (var i = 0; i < initSize; i++)
 			{
 				var entity = instantiator.Invoke(SampleEntity);
 				var poolEntity = entity as IPoolEntityObject<T>;
-				
+
 				poolEntity?.Init(this);
 				_stack.Push(entity);
 			}
 		}
 
 		/// <inheritdoc />
-		public bool IsSpawned(Func<T,bool> conditionCheck)
+		public bool IsSpawned(Func<T, bool> conditionCheck)
 		{
 			for (var i = 0; i < SpawnedEntities.Count; i++)
 			{
@@ -213,7 +213,7 @@ namespace GameLovers.Services
 		public List<T> Clear()
 		{
 			var ret = new List<T>(SpawnedEntities);
-			
+
 			ret.AddRange(_stack);
 			SpawnedEntities.Clear();
 			_stack.Clear();
@@ -230,15 +230,29 @@ namespace GameLovers.Services
 			}
 		}
 
-		public abstract T Spawn();
+		/// <inheritdoc />
+		public T Spawn()
+		{
+			var entity = SpawnEntity();
 
-		public abstract T Spawn<TData>(TData data);
+			CallOnSpawned(entity);
 
-		public abstract bool Despawn(T entity);
+			return entity;
+		}
 
-		public abstract void Dispose();
+		/// <inheritdoc />
+		public T Spawn<TData>(TData data)
+		{
+			var entity = SpawnEntity();
 
-		protected bool DespawnEntity(T entity)
+			CallOnSpawned(entity);
+			CallOnSpawned(entity, data);
+
+			return entity;
+		}
+
+		/// <inheritdoc />
+		public bool Despawn(T entity)
 		{
 			if (!SpawnedEntities.Remove(entity) || entity == null || entity.Equals(null))
 			{
@@ -246,33 +260,32 @@ namespace GameLovers.Services
 			}
 
 			_stack.Push(entity);
+			CallOnDespawned(entity);
+			PostDespawnEntity(entity);
 
 			return true;
 		}
 
-		protected T SpawnEntity()
+		public abstract void Dispose();
+
+		protected virtual T SpawnEntity()
 		{
 			T entity = null;
-			
+
 			do
-			{ 
+			{
 				entity = _stack.Count == 0 ? _instantiator.Invoke(SampleEntity) : _stack.Pop();
-			} 
+			}
 			// Need to do while loop and check as parent objects could have destroyed the entity/gameobject before it could
 			// be properly disposed by pool service
 			while (entity == null);
-			
+
 			SpawnedEntities.Add(entity);
 
 			return entity;
 		}
 
-		protected void CallOnDespawned(T entity)
-		{
-			var poolEntity = entity as IPoolEntityDespawn;
-
-			poolEntity?.OnDespawn();
-		}
+		protected virtual void PostDespawnEntity(T entity) { }
 
 		protected void CallOnSpawned(T entity)
 		{
@@ -287,6 +300,13 @@ namespace GameLovers.Services
 
 			poolEntity?.OnSpawn(data);
 		}
+
+		protected void CallOnDespawned(T entity)
+		{
+			var poolEntity = entity as IPoolEntityDespawn;
+
+			poolEntity?.OnDespawn();
+		}
 	}
 
 	/// <inheritdoc />
@@ -297,39 +317,6 @@ namespace GameLovers.Services
 	{
 		public ObjectRefPool(uint initSize, T sampleEntity, Func<T, T> instantiator) : base(initSize, sampleEntity, instantiator)
 		{
-		}
-
-		/// <inheritdoc />
-		public override T Spawn()
-		{
-			var entity = SpawnEntity();
-
-			CallOnSpawned(entity);
-
-			return entity;
-		}
-
-		/// <inheritdoc />
-		public override T Spawn<TData>(TData data)
-		{
-			var entity = SpawnEntity();
-
-			CallOnSpawned(entity, data);
-
-			return entity;
-		}
-
-		/// <inheritdoc />
-		public override bool Despawn(T entity)
-		{
-			if (!base.DespawnEntity(entity))
-			{
-				return false;
-			}
-
-			CallOnDespawned(entity);
-
-			return true;
 		}
 
 		/// <inheritdoc />
@@ -346,7 +333,7 @@ namespace GameLovers.Services
 		{
 		}
 	}
-	
+
 	/// <inheritdoc />
 	/// <remarks>
 	/// Useful to for pools that use object references to create new <see cref="GameObject"/>
@@ -358,50 +345,9 @@ namespace GameLovers.Services
 		/// parent transform
 		/// </summary>
 		public bool DespawnToSampleParent { get; set; }
-		
+
 		public GameObjectPool(uint initSize, GameObject sampleEntity) : base(initSize, sampleEntity, Instantiator)
 		{
-		}
-
-		/// <inheritdoc />
-		public override GameObject Spawn()
-		{
-			var entity = SpawnEntity();
-
-			entity.SetActive(true);
-			CallOnSpawned(entity);
-
-			return entity;
-		}
-
-		/// <inheritdoc />
-		public override GameObject Spawn<TData>(TData data)
-		{
-			var entity = SpawnEntity();
-
-			entity.SetActive(true);
-			CallOnSpawned(entity, data);
-
-			return entity;
-		}
-
-		/// <inheritdoc />
-		public override bool Despawn(GameObject entity)
-		{
-			if (!base.DespawnEntity(entity))
-			{
-				return false;
-			}
-
-			CallOnDespawned(entity);
-			entity.SetActive(false);
-
-			if (DespawnToSampleParent && SampleEntity != null)
-			{
-				entity.transform.SetParent(SampleEntity.transform.parent);
-			}
-				
-			return true;
 		}
 
 		/// <inheritdoc />
@@ -426,6 +372,25 @@ namespace GameLovers.Services
 
 			return instance;
 		}
+
+		protected override GameObject SpawnEntity()
+		{
+			var entity = SpawnEntity();
+
+			entity.SetActive(true);
+
+			return entity;
+		}
+
+		protected override void PostDespawnEntity(GameObject entity)
+		{
+			entity.SetActive(false);
+
+			if (DespawnToSampleParent && SampleEntity != null)
+			{
+				entity.transform.SetParent(SampleEntity.transform.parent);
+			}
+		}
 	}
 
 	/// <inheritdoc />
@@ -439,72 +404,13 @@ namespace GameLovers.Services
 		/// parent transform
 		/// </summary>
 		public bool DespawnToSampleParent { get; set; }
-		
+
 		public GameObjectPool(uint initSize, T sampleEntity) : base(initSize, sampleEntity, Instantiator)
 		{
 		}
-		
+
 		public GameObjectPool(uint initSize, T sampleEntity, Func<T, T> instantiator) : base(initSize, sampleEntity, instantiator)
 		{
-		}
-
-		/// <inheritdoc />
-		public override T Spawn()
-		{
-			T entity = null;
-			
-			do
-			{ 
-				entity = SpawnEntity();
-			} 
-			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-			// Need to do while loop and check as parent objects could have destroyed the entity/gameobject before it could
-			// be properly disposed by pool service
-			while (entity == null || entity.gameObject == null);
-			
-			entity.gameObject.SetActive(true);
-			CallOnSpawned(entity);
-
-			return entity;
-		}
-
-		/// <inheritdoc />
-		public override T Spawn<TData>(TData data)
-		{
-			T entity = null;
-
-			do
-			{
-				entity = SpawnEntity();
-			}
-			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-			// Need to do while loop and check as parent objects could have destroyed the entity/gameobject before it could
-			// be properly disposed by pool service
-			while (entity == null || entity.gameObject == null);
-
-			entity.gameObject.SetActive(true);
-			CallOnSpawned(entity, data);
-
-			return entity;
-		}
-
-		/// <inheritdoc />
-		public override bool Despawn(T entity)
-		{
-			if (!base.DespawnEntity(entity))
-			{
-				return false;
-			}
-
-			CallOnDespawned(entity);
-			entity.gameObject.SetActive(false);
-
-			if (DespawnToSampleParent && SampleEntity is not null && !SampleEntity.Equals(null))
-			{
-				entity.transform.SetParent(SampleEntity.transform.parent);
-			}
-
-			return true;
 		}
 
 		/// <inheritdoc />
@@ -530,6 +436,34 @@ namespace GameLovers.Services
 			instance.gameObject.SetActive(false);
 
 			return instance;
+		}
+
+		protected override T SpawnEntity()
+		{
+			T entity = null;
+
+			do
+			{
+				entity = SpawnEntity();
+			}
+			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+			// Need to do while loop and check as parent objects could have destroyed the entity/gameobject before it could
+			// be properly disposed by pool service
+			while (entity == null || entity.gameObject == null);
+
+			entity.gameObject.SetActive(true);
+
+			return entity;
+		}
+
+		protected override void PostDespawnEntity(T entity)
+		{
+			entity.gameObject.SetActive(false);
+
+			if (DespawnToSampleParent && SampleEntity is not null && !SampleEntity.Equals(null))
+			{
+				entity.transform.SetParent(SampleEntity.transform.parent);
+			}
 		}
 	}
 }

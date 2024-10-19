@@ -1,69 +1,102 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 // ReSharper disable once CheckNamespace
 
 namespace GameLovers.Services
-{	
+{
 	/// <summary>
 	/// This service allows to manage multiple pools of different types.
 	/// The service can only a single pool of the same type. 
 	/// </summary>
-	public interface IPoolService : IDisposable 
+	public interface IPoolService : IDisposable
 	{
 		/// <summary>
-		/// Adds the given <paramref name="pool"/> of <typeparamref name="T"/> to the service
+		/// Retrieves the pool of objects of type <typeparamref name="T"/>.
+		/// If the pool does not exist, an <see cref="ArgumentException"/> is thrown.
 		/// </summary>
-		/// <exception cref="ArgumentException">
-		/// Thrown if the service already has a pool of the given <typeparamref name="T"/> type
-		/// </exception>
+		/// <typeparam name="T">The type of objects in the pool.</typeparam>
+		/// <returns>The pool of objects.</returns>
+		/// <exception cref="ArgumentException">Thrown if the pool does not exist.</exception>
+		IObjectPool<T> GetPool<T>() where T : class;
+
+		/// <summary>
+		/// Tries to retrieve the pool of objects of type <typeparamref name="T"/>.
+		/// </summary>
+		/// <typeparam name="T">The type of objects in the pool.</typeparam>
+		/// <param name="pool">The pool of objects, or null if it does not exist.</param>
+		/// <returns>True if the pool exists, false otherwise.</returns>
+		bool TryGetPool<T>(out IObjectPool<T> pool) where T : class;
+
+		/// <summary>
+		/// Adds a new pool of objects of type <typeparamref name="T"/> to the service.
+		/// If a pool of the same type already exists, an <see cref="ArgumentException"/> is thrown.
+		/// </summary>
+		/// <typeparam name="T">The type of objects in the pool.</typeparam>
+		/// <param name="pool">The pool of objects to add.</param>
+		/// <exception cref="ArgumentException">Thrown if a pool of the same type already exists.</exception>
 		void AddPool<T>(IObjectPool<T> pool) where T : class;
 
 		/// <summary>
-		/// Removes the pool of the given <typeparamref name="T"/>
+		/// Removes the pool of objects of type <typeparamref name="T"/> from the service.
 		/// </summary>
+		/// <typeparam name="T">The type of objects in the pool.</typeparam>
 		void RemovePool<T>() where T : class;
 
-		/// <summary>
-		/// Checks if exists a pool of the given type already exists or needs to be added before calling <seealso cref="Spawn{T}"/>
-		/// </summary>
-		bool HasPool<T>() where T : class;
-
-		/// <inheritdoc cref="HasPool{T}"/>
-		bool HasPool(Type type);
-
-		/// <inheritdoc cref="IObjectPool{T}.IsSpawned"/>
-		bool IsSpawned<T>(Func<T, bool> conditionCheck) where T : class;
-		
 		/// <inheritdoc cref="IObjectPool{T}.Spawn"/>
-		/// <exception cref="ArgumentException">
-		/// Thrown if the service does not contains a pool of the given <typeparamref name="T"/> type
-		/// </exception>
 		T Spawn<T>() where T : class;
-		
+
+		/// <inheritdoc cref="IObjectPool{T}.Spawn{TData}"/>
+		T Spawn<T, TData>(TData data) where T : class, IPoolEntitySpawn<TData>;
+
 		/// <inheritdoc cref="IObjectPool{T}.Despawn"/>
-		/// <exception cref="ArgumentException">
-		/// Thrown if the service does not contains a pool of the given <typeparamref name="T"/> type
-		/// </exception>
 		bool Despawn<T>(T entity) where T : class;
 
-		/// <inheritdoc cref="IObjectPool{T}.DespawnAll"/>
+		/// <summary>
+		/// Despawns all entities from the pool of type <typeparamref name="T"/>.
+		/// </summary>
+		/// <typeparam name="T">The type of the entities to be despawned.</typeparam>
 		/// <exception cref="ArgumentException">
-		/// Thrown if the service does not contains a pool of the given <typeparamref name="T"/> type
+		/// Thrown if the service does not contain a pool of the given <typeparamref name="T"/> type.
 		/// </exception>
 		void DespawnAll<T>() where T : class;
-		
+
 		/// <summary>
 		/// Clears the contents out of this service.
-		/// Returns back all pools so they can be independently disposed
+		/// Returns back all pools so they can be independently disposed.
 		/// </summary>
+		/// <returns>
+		/// A dictionary containing all the pools in this service, where the key is the type of the pool and the value is the pool itself.
+		/// </returns>
 		IDictionary<Type, IObjectPool> Clear();
 	}
-	
+
 	/// <inheritdoc />
 	public class PoolService : IPoolService
 	{
 		private readonly IDictionary<Type, IObjectPool> _pools = new Dictionary<Type, IObjectPool>();
+
+		/// <inheritdoc />
+		public IObjectPool<T> GetPool<T>() where T : class
+		{
+			if (!TryGetPool<T>(out var pool))
+			{
+				throw new ArgumentException("The pool was not initialized for the type " + typeof(T));
+			}
+
+			return pool;
+		}
+
+		/// <inheritdoc />
+		public bool TryGetPool<T>(out IObjectPool<T> pool) where T : class
+		{
+			var ret = _pools.TryGetValue(typeof(T), out var innerPool);
+
+			pool = innerPool as IObjectPool<T>;
+
+			return ret;
+		}
 
 		/// <inheritdoc />
 		public void AddPool<T>(IObjectPool<T> pool) where T : class
@@ -78,27 +111,15 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public bool HasPool<T>() where T : class
-		{
-			return HasPool(typeof(T));
-		}
-
-		/// <inheritdoc />
-		public bool HasPool(Type type)
-		{
-			return _pools.ContainsKey(type);
-		}
-
-		/// <inheritdoc />
-		public bool IsSpawned<T>(Func<T, bool> conditionCheck) where T : class
-		{
-			return GetPool<T>().IsSpawned(conditionCheck);
-		}
-
-		/// <inheritdoc />
 		public T Spawn<T>() where T : class
 		{
 			return GetPool<T>().Spawn();
+		}
+
+		/// <inheritdoc />
+		public T Spawn<T, TData>(TData data) where T : class, IPoolEntitySpawn<TData>
+		{
+			return GetPool<T>().Spawn(data);
 		}
 
 		/// <inheritdoc />
@@ -130,18 +151,8 @@ namespace GameLovers.Services
 			{
 				pool.Value.Dispose();
 			}
-			
+
 			_pools.Clear();
-		}
-
-		private IObjectPool<T> GetPool<T>() where T : class
-		{
-			if (!_pools.TryGetValue(typeof(T), out var pool))
-			{
-				throw new ArgumentException("The pool was not initialized for the type " + typeof(T));
-			}
-
-			return pool as IObjectPool<T>;
 		}
 	}
 }
