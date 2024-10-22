@@ -4,6 +4,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2024-10-22
+
+- Added IRngData to PoolService to suppprt read only data structure and allow abtract injection of data into other objects
+
+**Changed**:
+- Changed RngData to a class in orther to avoid boxing/unboxing performance when injecting IRngData.
+
 ## [0.11.0] - 2024-10-19
 
 - Added Spawn<T>(T data) method to PoolService to allow spawning new objects with defined spawning data
