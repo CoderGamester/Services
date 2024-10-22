@@ -1,30 +1,57 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace GameLovers.Services
 {
 	/// <summary>
-	/// Contains all the data in the scope to generate and maintain the random generated values
-	/// </summary>
-	[Serializable]
-	public struct RngData
-	{
-		public int Seed;
-		public int Count;
-		public int[] State;
-	}
-
-	/// <summary>
 	/// Implement this interface if you use a data structure in a class to pass the values by reference
-	/// and thus updating directly your internal data container
+	/// and thus updating directly your internal data container.
 	/// </summary>
 	public interface IRngData
 	{
 		/// <summary>
-		/// The data container the state of the RNG information change.
+		/// Gets the seed used to initialize the RNG.
 		/// </summary>
-		RngData Data { get; set; }
-}
+		int Seed { get; }
 
+		/// <summary>
+		/// Gets the number of random numbers generated so far.
+		/// </summary>
+		int Count { get; }
+
+		/// <summary>
+		/// Gets the current state of the RNG.
+		/// </summary>
+		IReadOnlyList<int> State { get; }
+	}
+
+	/// <summary>
+	/// Represents a data structure for storing random number generation (RNG) state.
+	/// </summary>
+	public class RngData : IRngData
+	{
+		/// <summary>
+		/// The seed used to initialize the RNG.
+		/// </summary>
+		public int Seed;
+
+		/// <summary>
+		/// The number of random numbers generated so far.
+		/// </summary>
+		public int Count;
+
+		/// <summary>
+		/// The current state of the RNG.
+		/// </summary>
+		public int[] State;
+
+		/// <inheritdoc/>
+		int IRngData.Seed => Seed;
+		/// <inheritdoc/>
+		int IRngData.Count => Count;
+		/// <inheritdoc/>
+		IReadOnlyList<int> IRngData.State => Array.AsReadOnly(State);
+	}
 	/// <summary>
 	/// This Service provides the necessary behaviour to manage the random generated values with always a deterministic result
 	/// Based on the .Net library Random class <see cref="https://referencesource.microsoft.com/#mscorlib/system/random.cs"/>
@@ -32,9 +59,9 @@ namespace GameLovers.Services
 	public interface IRngService
 	{
 		/// <summary>
-		/// The <see cref="RngData"/> that this service is manipulating
+		/// The <see cref="IRngData"/> that this service is manipulating
 		/// </summary>
-		public RngData Data { get; }
+		public IRngData Data { get; }
 
 		/// <summary>
 		/// Returns the number of times the Rng has been counted;
@@ -96,7 +123,7 @@ namespace GameLovers.Services
 		private const int _helperInc = 21;
 		private const int _valueIndex = 0;
 
-		private IRngData _rngData;
+		private RngData _rngData;
 
 		/// <inheritdoc />
 		public int Counter => Data.Count;
@@ -114,67 +141,46 @@ namespace GameLovers.Services
 		public floatP Nextfloat => Range((floatP) 0, floatP.MaxValue);
 
 		/// <inheritdoc />
-		public RngData Data
-		{
-			get => _rngData.Data;
-			private set => _rngData.Data = value;
-		}
+		public IRngData Data => _rngData;
 
 		public RngService(RngData rngData)
 		{
-			_rngData = new InternalRngData { Data = rngData };
-		}
-
-		public RngService(IRngData data)
-		{
-			_rngData = data;
+			_rngData = rngData;
 		}
 
 		/// <inheritdoc />
 		public int PeekRange(int min, int max, bool maxInclusive = false)
 		{
-			return Range(min, max, CopyRngState(Data.State), maxInclusive);
+			return Range(min, max, CopyRngState(_rngData.State), maxInclusive);
 		}
 
 		/// <inheritdoc />
 		public floatP PeekRange(floatP min, floatP max, bool maxInclusive = true)
 		{
-			return Range(min, max, CopyRngState(Data.State), maxInclusive);
+			return Range(min, max, CopyRngState(_rngData.State), maxInclusive);
 		}
 
 		/// <inheritdoc />
 		public int Range(int min, int max, bool maxInclusive = false)
 		{
-			var data = Data;
+			_rngData.Count++;
 
-			data.Count++;
-
-			Data = data;
-
-			return Range(min, max, Data.State, maxInclusive);
+			return Range(min, max, _rngData.State, maxInclusive);
 		}
 
 		/// <inheritdoc />
 		public floatP Range(floatP min, floatP max, bool maxInclusive = true)
 		{
-			var data = Data;
+			_rngData.Count++;
 
-			data.Count++;
-
-			Data = data;
-
-			return Range(min, max, Data.State, maxInclusive);
+			return Range(min, max, _rngData.State, maxInclusive);
 		}
 
 		/// <inheritdoc />
 		public void Restore(int count)
 		{
-			var data = Data;
-
-			data.Count = count;
-			data.State = Restore(count, Data.Seed);
-
-			Data = data;
+			_rngData.Count = count;
+			_rngData.State = Restore(count, _rngData.Seed);
 		}
 
 		/// <summary>
@@ -255,6 +261,21 @@ namespace GameLovers.Services
 		}
 
 		/// <summary>
+		/// Creates a new instance of <see cref="RngData"/> with the given <paramref name="seed"/>.
+		/// </summary>
+		/// <param name="seed">The seed value for the RNG.</param>
+		/// <returns>A new instance of <see cref="RngData"/> with the given <paramref name="seed"/> and an initial count of 0.</returns>
+		public static RngData CreateRngData(int seed)
+		{
+			return new RngData
+			{
+				Seed = seed,
+				Count = 0,
+				State = GenerateRngState(seed)
+			};
+		}
+
+		/// <summary>
 		/// Generates a completely new state rng state based on the given <paramref name="seed"/>.
 		/// Based on the publish work of D.E. Knuth <see cref="https://www.informit.com/articles/article.aspx?p=2221790"/>
 		/// </summary>
@@ -318,15 +339,6 @@ namespace GameLovers.Services
 			rndState[_valueIndex] = index1;
 
 			return ret;
-		}
-
-		/// <summary>
-		/// Used only in the scope of this service in case that no class is passed into the object
-		/// </summary>
-		private class InternalRngData : IRngData
-		{
-			/// <inheritdoc />
-			public RngData Data { get; set; }
 		}
 	}
 }
