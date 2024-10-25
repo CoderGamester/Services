@@ -205,8 +205,8 @@ namespace GameLovers.Services
 		/// </summary>
 		public static int Range(int min, int max, int[] rndState, bool maxInclusive)
 		{
-			var floatMin = min;
-			var floatMax = max;
+			floatP floatMin = min;
+			floatP floatMax = max;
 
 			return Range(floatMin, floatMax, rndState, maxInclusive);
 		}
