@@ -4,6 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.12.1] - 2024-10-25
+
+**Fixed**:
+- The endless loop when calling *RngService.Range()*
+- The endless loop *GameObjectPool* when spawning new entities
+
 ## [0.12.0] - 2024-10-22
 
 - Added IRngData to PoolService to suppprt read only data structure and allow abtract injection of data into other objects
@@ -51,12 +57,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.7.1] - 2023-07-28
 
-**Fixed**:
-- Compilation errors in various test files and the PoolService class have been fixed.
-
 **Changed**:
 - Tests have been moved to proper folders, and the package number has been updated.
 - An unused namespace import has been removed from the InstallerTest class.
+
+**Fixed**:
+- Compilation errors in various test files and the PoolService class have been fixed.
 
 ## [0.7.0] - 2023-07-28
 

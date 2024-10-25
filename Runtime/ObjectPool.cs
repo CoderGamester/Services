@@ -344,7 +344,7 @@ namespace GameLovers.Services
 		/// If true then when the object is despawned back to the pool will be parented to the same as the sample entity
 		/// parent transform
 		/// </summary>
-		public bool DespawnToSampleParent { get; set; }
+		public bool DespawnToSampleParent { get; set; } = true;
 
 		public GameObjectPool(uint initSize, GameObject sampleEntity) : base(initSize, sampleEntity, Instantiator)
 		{
@@ -375,7 +375,7 @@ namespace GameLovers.Services
 
 		protected override GameObject SpawnEntity()
 		{
-			var entity = SpawnEntity();
+			var entity = base.SpawnEntity();
 
 			entity.SetActive(true);
 
@@ -403,7 +403,7 @@ namespace GameLovers.Services
 		/// If true then when the object is despawned back to the pool will be parented to the same as the sample entity
 		/// parent transform
 		/// </summary>
-		public bool DespawnToSampleParent { get; set; }
+		public bool DespawnToSampleParent { get; set; } = true;
 
 		public GameObjectPool(uint initSize, T sampleEntity) : base(initSize, sampleEntity, Instantiator)
 		{
@@ -442,14 +442,17 @@ namespace GameLovers.Services
 		{
 			T entity = null;
 
-			do
+			while(entity == null)
 			{
-				entity = SpawnEntity();
+				entity = base.SpawnEntity();
+
+				if(entity.gameObject == null)
+				{
+					SpawnedEntities.Remove(entity);
+
+					entity = null;
+				}
 			}
-			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-			// Need to do while loop and check as parent objects could have destroyed the entity/gameobject before it could
-			// be properly disposed by pool service
-			while (entity == null || entity.gameObject == null);
 
 			entity.gameObject.SetActive(true);
 
