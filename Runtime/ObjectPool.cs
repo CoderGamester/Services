@@ -164,11 +164,7 @@ namespace GameLovers.Services
 
 			for (var i = 0; i < initSize; i++)
 			{
-				var entity = instantiator.Invoke(SampleEntity);
-				var poolEntity = entity as IPoolEntityObject<T>;
-
-				poolEntity?.Init(this);
-				_stack.Push(entity);
+				_stack.Push(CallInstantiator());
 			}
 		}
 
@@ -274,7 +270,7 @@ namespace GameLovers.Services
 
 			do
 			{
-				entity = _stack.Count == 0 ? _instantiator.Invoke(SampleEntity) : _stack.Pop();
+				entity = _stack.Count == 0 ? CallInstantiator() : _stack.Pop();
 			}
 			// Need to do while loop and check as parent objects could have destroyed the entity/gameobject before it could
 			// be properly disposed by pool service
@@ -286,6 +282,16 @@ namespace GameLovers.Services
 		}
 
 		protected virtual void PostDespawnEntity(T entity) { }
+
+		protected T CallInstantiator()
+		{
+			var entity = _instantiator.Invoke(SampleEntity);
+			var poolEntity = entity as IPoolEntityObject<T>;
+
+			poolEntity?.Init(this);
+
+			return entity;
+		}
 
 		protected void CallOnSpawned(T entity)
 		{
