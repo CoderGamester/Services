@@ -22,7 +22,7 @@ namespace GameLoversEditor.Services.Tests
 		{
 			public int Payload;
 			
-			public void Execute(IGameLogicMockup gameLogic)
+			public void Execute(IGameLogicMockup gameLogic, IMessageBrokerService messageBroker)
 			{
 				gameLogic.CallMockup(Payload);
 			}
@@ -32,7 +32,7 @@ namespace GameLoversEditor.Services.Tests
 		public void Init()
 		{
 			_gameLogicMockup = Substitute.For<IGameLogicMockup>();
-			_commandService = new CommandService<IGameLogicMockup>(_gameLogicMockup);
+			_commandService = new CommandService<IGameLogicMockup>(_gameLogicMockup, Substitute.For<IMessageBrokerService>());
 		}
 
 		[Test]
