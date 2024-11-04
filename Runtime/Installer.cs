@@ -36,7 +36,10 @@ namespace GameLovers.Services
 		/// <returns>
 		/// This installer reference to allow chain calls if necessayr
 		/// </returns>
-		IInstaller Bind<T1, T2>(T1 instance) where T1 : class, T2;
+		IInstaller Bind<T, T1, T2>(T instance)
+			where T : class, T1, T2
+			where T1 : class
+			where T2 : class;
 
 		/// <summary>
 		/// Binds the interface multiple type interefaces to the given <paramref name="instance"/>
@@ -47,18 +50,11 @@ namespace GameLovers.Services
 		/// <returns>
 		/// This installer reference to allow chain calls if necessayr
 		/// </returns>
-		IInstaller Bind<T1, T2, T3>(T1 instance) where T1 : class, T2, T3;
-
-		/// <summary>
-		/// Binds the interface multiple type interefaces to the given <paramref name="instance"/>
-		/// </summary>
-		/// <exception cref="ArgumentException">
-		/// Thrown if the given <paramref name="instance"/> doesn't implement all type interface
-		/// </exception>
-		/// <returns>
-		/// This installer reference to allow chain calls if necessayr
-		/// </returns>
-		IInstaller Bind<T1, T2, T3, T4>(T1 instance) where T1 : class, T2, T3, T4;
+		IInstaller Bind<T, T1, T2, T3>(T instance) 
+			where T : class, T1, T2, T3
+			where T1 : class
+			where T2 : class
+			where T3 : class;
 
 		/// <summary>
 		/// Tries requesting the instance binded to the type <typeparamref name="T"/>
@@ -109,88 +105,27 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public IInstaller Bind<T1, T2>(T1 instance) where T1 : class, T2
+		public IInstaller Bind<T, T1, T2>(T instance)
+			where T : class, T1, T2
+			where T1 : class
+			where T2 : class
 		{
-			var type1 = typeof(T1);
-			var type2 = typeof(T2);
-
-			if (!type1.IsInterface)
-			{
-				throw new ArgumentException($"Cannot bind {instance} because {type1} is not an interface");
-			}
-
-			if (!type2.IsInterface)
-			{
-				throw new ArgumentException($"Cannot bind {instance} because {type1} is not an interface");
-			}
-
-			_bindings.Add(type1, instance);
-			_bindings.Add(type2, instance);
+			Bind<T1>(instance);
+			Bind<T2>(instance);
 
 			return this;
 		}
 
 		/// <inheritdoc />
-		public IInstaller Bind<T1, T2, T3>(T1 instance) where T1 : class, T2, T3
+		public IInstaller Bind<T, T1, T2, T3>(T instance)
+			where T : class, T1, T2, T3
+			where T1 : class
+			where T2 : class
+			where T3 : class
 		{
-			var type1 = typeof(T1);
-			var type2 = typeof(T2);
-			var type3 = typeof(T3);
-
-			if (!type1.IsInterface)
-			{
-				throw new ArgumentException($"Cannot bind {instance} because {type1} is not an interface");
-			}
-
-			if (!type2.IsInterface)
-			{
-				throw new ArgumentException($"Cannot bind {instance} because {type2} is not an interface");
-			}
-
-			if (!type3.IsInterface)
-			{
-				throw new ArgumentException($"Cannot bind {instance} because {type3} is not an interface");
-			}
-
-			_bindings.Add(type1, instance);
-			_bindings.Add(type2, instance);
-			_bindings.Add(type3, instance);
-
-			return this;
-		}
-
-		/// <inheritdoc />
-		public IInstaller Bind<T1, T2, T3, T4>(T1 instance) where T1 : class, T2, T3, T4
-		{
-			var type1 = typeof(T1);
-			var type2 = typeof(T2);
-			var type3 = typeof(T3);
-			var type4 = typeof(T4);
-
-			if (!type1.IsInterface)
-			{
-				throw new ArgumentException($"Cannot bind {instance} because {type1} is not an interface");
-			}
-
-			if (!type2.IsInterface)
-			{
-				throw new ArgumentException($"Cannot bind {instance} because {type2} is not an interface");
-			}
-
-			if (!type3.IsInterface)
-			{
-				throw new ArgumentException($"Cannot bind {instance} because {type3} is not an interface");
-			}
-
-			if (!type4.IsInterface)
-			{
-				throw new ArgumentException($"Cannot bind {instance} because {type4} is not an interface");
-			}
-
-			_bindings.Add(type1, instance);
-			_bindings.Add(type2, instance);
-			_bindings.Add(type3, instance);
-			_bindings.Add(type4, instance);
+			Bind<T1>(instance);
+			Bind<T2>(instance);
+			Bind<T3>(instance);
 
 			return this;
 		}
