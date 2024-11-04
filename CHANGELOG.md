@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2024-11-04
+
+**Changed**:
+- Changed *CommandService* to now receive the *MessageBrokerService* in the command and help communication with the game architecture
+
 ## [0.12.2] - 2024-11-02
 
 **Fixed**:

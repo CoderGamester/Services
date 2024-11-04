@@ -6,7 +6,22 @@ namespace GameLovers.Services
 	/// Tags the interface as a <see cref="IGameCommand{TGameLogic}"/>
 	/// </summary>
 	public interface IGameCommandBase {}
-	
+
+	/// <summary>
+	/// Contract for the command to be executed in the <see cref="ICommandService{TGameLogic}"/>.
+	/// Implement this interface if you want logic to be executed ont he server
+	/// </summary>
+	/// <remarks>
+	/// Follows the Command pattern <see cref="https://en.wikipedia.org/wiki/Command_pattern"/>
+	/// </remarks>
+	public interface IGameServerCommand<in TGameLogic> : IGameCommandBase where TGameLogic : class
+	{
+		/// <summary>
+		/// Executes the command logic defined by the implemention of this interface
+		/// </summary>
+		void ExecuteLogic(TGameLogic gameLogic);
+	}
+
 	/// <summary>
 	/// Interface representing the command to be executed in the <see cref="ICommandService{TGameLogic}"/>.
 	/// Implement this interface with the proper command logic
@@ -19,7 +34,7 @@ namespace GameLovers.Services
 		/// <summary>
 		/// Executes the command logic defined by the implemention of this interface
 		/// </summary>
-		void Execute(TGameLogic gameLogic);
+		void Execute(TGameLogic gameLogic, IMessageBrokerService messageBroker);
 	}
 	
 	/// <summary>
@@ -42,16 +57,18 @@ namespace GameLovers.Services
 	public class CommandService<TGameLogic> : ICommandService<TGameLogic> where TGameLogic : class
 	{
 		private readonly TGameLogic _gameLogic;
-		
-		public CommandService(TGameLogic gameLogic)
+		private readonly IMessageBrokerService _messageBroker;
+
+		public CommandService(TGameLogic gameLogic, IMessageBrokerService messageBroker)
 		{
 			_gameLogic = gameLogic;
+			_messageBroker = messageBroker;
 		}
-		
+
 		/// <inheritdoc />
 		public void ExecuteCommand<TCommand>(TCommand command) where TCommand : IGameCommand<TGameLogic>
 		{
-			command.Execute(_gameLogic);
+			command.Execute(_gameLogic, _messageBroker);
 		}
 	}
 }
