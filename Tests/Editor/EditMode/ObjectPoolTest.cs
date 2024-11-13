@@ -15,7 +15,19 @@ namespace GameLoversEditor.Services.Tests
 		private IMockEntity _mockEntity;
 		private uint _initialSize = 5;
 
-		public interface IMockEntity : IPoolEntitySpawn, IPoolEntityDespawn, IPoolEntityObject<object>, IPoolEntitySpawn<object> { }
+		public interface IMockEntity : IPoolEntitySpawn, IPoolEntityDespawn, IPoolEntityObject<IMockEntity>, IPoolEntitySpawn<object> { }
+		public class MockEntity : IMockEntity
+		{
+			private IObjectPool<IMockEntity> _pool;
+
+			public void Init(IObjectPool<IMockEntity> pool) => _pool = pool;
+
+			public bool Despawn() => _pool.Despawn(this);
+			public void OnDespawn()	{}
+
+			public void OnSpawn() {}
+			public void OnSpawn(object data) {}
+		}
 
 		[SetUp]
 		public void Init()
@@ -64,6 +76,19 @@ namespace GameLoversEditor.Services.Tests
 			Assert.IsTrue(_pool.Despawn(_mockEntity));
 			_mockEntity.Received().OnDespawn();
 		}
+
+		/* Uncomment when finding someone that can help fix this interface
+		[Test]
+		public void EntityDespawn_Successfully()
+		{
+			var pool = Substitute.For<IObjectPool<IMockEntity>>();
+			var entity = new MockEntity();
+
+			entity.Init(pool);
+
+			Assert.IsTrue(entity.Despawn());
+			pool.Received().Despawn(entity);
+		}*/
 
 		[Test]
 		public void Despawn_NotSpawnedObject_ReturnsFalse()

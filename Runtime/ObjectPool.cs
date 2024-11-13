@@ -44,7 +44,7 @@ namespace GameLovers.Services
 	}
 
 	/// <summary>
-	/// This interface allows to self despawn by maintaining the reference of the pool that created it
+	/// This interface allows to self despawn by maintaining the reference of the despawing call
 	/// </summary>
 	/// <remarks>
 	/// Implemenation of this class:
@@ -183,29 +183,6 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public bool Despawn(bool onlyFirst, Func<T, bool> entityGetter)
-		{
-			var despawned = false;
-
-			for (var i = 0; i < SpawnedEntities.Count; i++)
-			{
-				if (!entityGetter(SpawnedEntities[i]))
-				{
-					continue;
-				}
-
-				despawned = Despawn(SpawnedEntities[i]);
-
-				if (onlyFirst)
-				{
-					break;
-				}
-			}
-
-			return despawned;
-		}
-
-		/// <inheritdoc />
 		public List<T> Clear()
 		{
 			var ret = new List<T>(SpawnedEntities);
@@ -260,6 +237,29 @@ namespace GameLovers.Services
 			PostDespawnEntity(entity);
 
 			return true;
+		}
+
+		/// <inheritdoc />
+		public bool Despawn(bool onlyFirst, Func<T, bool> entityGetter)
+		{
+			var despawned = false;
+
+			for (var i = 0; i < SpawnedEntities.Count; i++)
+			{
+				if (!entityGetter(SpawnedEntities[i]))
+				{
+					continue;
+				}
+
+				despawned = Despawn(SpawnedEntities[i]);
+
+				if (onlyFirst)
+				{
+					break;
+				}
+			}
+
+			return despawned;
 		}
 
 		public abstract void Dispose();
@@ -353,6 +353,10 @@ namespace GameLovers.Services
 		public bool DespawnToSampleParent { get; set; } = true;
 
 		public GameObjectPool(uint initSize, GameObject sampleEntity) : base(initSize, sampleEntity, Instantiator)
+		{
+		}
+
+		public GameObjectPool(uint initSize, GameObject sampleEntity, Func<GameObject, GameObject> instantiator) : base(initSize, sampleEntity, instantiator)
 		{
 		}
 

@@ -18,7 +18,7 @@ namespace GameLoversEditor.Services.Tests
 			void CallMockup(int payload);
 		}
 
-		private struct CommandMockup : IGameCommand<IGameLogicMockup>
+		private class CommandMockup : IGameCommand<IGameLogicMockup>
 		{
 			public int Payload;
 			
