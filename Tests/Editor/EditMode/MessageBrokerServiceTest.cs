@@ -38,14 +38,35 @@ namespace GameLoversEditor.Services.Tests
 		{
 			_messageBroker.Subscribe<MessageType1>(_subscriber.MockMessageCall);
 			_messageBroker.Publish(_messageType1);
+			_messageBroker.PublishSafe(_messageType1);
 
-			_subscriber.Received().MockMessageCall(_messageType1);
+			_subscriber.Received(2).MockMessageCall(_messageType1);
+		}
+
+		[Test]
+		public void Subscribe_MultipleSubscriptionSameType_ReplacePreviousSubscription()
+		{
+			_messageBroker.Subscribe<MessageType1>(_subscriber.MockMessageCall);
+			_messageBroker.Subscribe<MessageType1>(_subscriber.MockMessageCall2);
+			_messageBroker.Publish(_messageType1);
+			_messageBroker.PublishSafe(_messageType1);
+
+			_subscriber.DidNotReceive().MockMessageCall(_messageType1);
+			_subscriber.Received(2).MockMessageCall2(_messageType1);
+		}
+
+		[Test]
+		public void Publish_ChainSubscribe_Successfully()
+		{
+			// TODO: Test
+			Assert.True(true);
 		}
 
 		[Test]
 		public void Publish_WithoutSubscription_DoesNothing()
 		{
 			_messageBroker.Publish(_messageType1);
+			_messageBroker.PublishSafe(_messageType1);
 
 			_subscriber.DidNotReceive().MockMessageCall(_messageType1);
 		}
@@ -54,22 +75,24 @@ namespace GameLoversEditor.Services.Tests
 		public void Unsubscribe_Successfully()
 		{
 			_messageBroker.Subscribe<MessageType1>(_subscriber.MockMessageCall);
-			_messageBroker.Unsubscribe<MessageType1>(_subscriber.MockMessageCall);
+			_messageBroker.Unsubscribe<MessageType1>(_subscriber);
 			_messageBroker.Publish(_messageType1);
+			_messageBroker.PublishSafe(_messageType1);
 
 			_subscriber.DidNotReceive().MockMessageCall(_messageType1);
 		}
 
 		[Test]
-		public void UnsubscribeWithAction_KeepsSubscriptionSameType_Successfully()
+		public void UnsubscribeWithAction_MultipleSubscriptionSameType_RemoveAllScriptionsOfSameType()
 		{
 			_messageBroker.Subscribe<MessageType1>(_subscriber.MockMessageCall);
 			_messageBroker.Subscribe<MessageType1>(_subscriber.MockMessageCall2);
-			_messageBroker.Unsubscribe<MessageType1>(_subscriber.MockMessageCall);
+			_messageBroker.Unsubscribe<MessageType1>(_subscriber);
 			_messageBroker.Publish(_messageType1);
+			_messageBroker.PublishSafe(_messageType1);
 
 			_subscriber.DidNotReceive().MockMessageCall(_messageType1);
-			_subscriber.Received().MockMessageCall2(_messageType1);
+			_subscriber.DidNotReceive().MockMessageCall2(_messageType1);
 		}
 
 		[Test]
@@ -79,9 +102,10 @@ namespace GameLoversEditor.Services.Tests
 			_messageBroker.Subscribe<MessageType2>(_subscriber.MockMessageAlternativeCall);
 			_messageBroker.Unsubscribe<MessageType1>();
 			_messageBroker.Publish(_messageType2);
+			_messageBroker.PublishSafe(_messageType2);
 
 			_subscriber.DidNotReceive().MockMessageCall(_messageType1);
-			_subscriber.Received().MockMessageAlternativeCall(_messageType2);
+			_subscriber.Received(2).MockMessageAlternativeCall(_messageType2);
 		}
 
 		[Test]
@@ -92,8 +116,10 @@ namespace GameLoversEditor.Services.Tests
 			_messageBroker.Subscribe<MessageType2>(_subscriber.MockMessageAlternativeCall);
 			_messageBroker.Subscribe<MessageType2>(_subscriber.MockMessageAlternativeCall2);
 			_messageBroker.UnsubscribeAll();
+			_messageBroker.Publish(_messageType1);
 			_messageBroker.Publish(_messageType2);
-			_messageBroker.Publish(_messageType2);
+			_messageBroker.PublishSafe(_messageType1);
+			_messageBroker.PublishSafe(_messageType2);
 
 			_subscriber.DidNotReceive().MockMessageCall(_messageType1);
 			_subscriber.DidNotReceive().MockMessageCall2(_messageType1);
@@ -104,7 +130,7 @@ namespace GameLoversEditor.Services.Tests
 		[Test]
 		public void Unsubscribe_WithoutSubscription_DoesNothing()
 		{
-			Assert.DoesNotThrow(() => _messageBroker.Unsubscribe<MessageType1>(_subscriber.MockMessageCall));
+			Assert.DoesNotThrow(() => _messageBroker.Unsubscribe<MessageType1>(_subscriber));
 			Assert.DoesNotThrow(() => _messageBroker.Unsubscribe<MessageType1>());
 			Assert.DoesNotThrow(() => _messageBroker.UnsubscribeAll());
 		}

@@ -4,13 +4,16 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.13.2] - 2024-11-13
+## [0.14.0] - 2024-11-15
 
 **New**:
-- Added a constructor to *GameObjectPool* that allows to setup a costum instantiator
+- Added *PublishSafe* method to *IMessageBrokerService* to allow publishing messages safely in chase of chain subscriptions during publishing of a message
+
+**Changed**:
+- *Subscribe* and *Unsubscribe* throw an *InvalidOperationException* when being executed during a message being published
 
 **Fixed**:
-- Fixed *ObjectPool* & *PoolService* tests that would block builds sometimes
+- CoroutineTests issues running when building released projects
 
 ## [0.13.1] - 2024-11-04
 
