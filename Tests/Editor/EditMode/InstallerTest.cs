@@ -1,9 +1,10 @@
 using System;
+using GameLovers.Services;
 using NUnit.Framework;
 
 // ReSharper disable once CheckNamespace
 
-namespace GameLovers.Services.Tests
+namespace GameLoversEditor.Services.Tests
 {
 	public class InstallerTest
 	{
