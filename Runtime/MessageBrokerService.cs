@@ -62,7 +62,7 @@ namespace GameLovers.Services
 	/// <inheritdoc />
 	public class MessageBrokerService : IMessageBrokerService
 	{
-		private readonly IDictionary<Type, IDictionary<object, object>> _subscriptions = new Dictionary<Type, IDictionary<object, object>>();
+		private readonly IDictionary<Type, IDictionary<object, Delegate>> _subscriptions = new Dictionary<Type, IDictionary<object, Delegate>>();
 
 		private (bool, IMessage) _isPublishing;
 
@@ -94,7 +94,7 @@ namespace GameLovers.Services
 				return;
 			}
 
-			var subscriptionCopy = new object[subscriptionObjects.Count];
+			var subscriptionCopy = new Delegate[subscriptionObjects.Count];
 
 			subscriptionObjects.Values.CopyTo(subscriptionCopy, 0);
 
@@ -124,7 +124,7 @@ namespace GameLovers.Services
 
 			if (!_subscriptions.TryGetValue(type, out var subscriptionObjects))
 			{
-				subscriptionObjects = new Dictionary<object, object>();
+				subscriptionObjects = new Dictionary<object, Delegate>();
 				_subscriptions.Add(type, subscriptionObjects);
 			}
 
@@ -170,6 +170,11 @@ namespace GameLovers.Services
 				return;
 			}
 
+			if (_isPublishing.Item1)
+			{
+				throw new InvalidOperationException($"Cannot unsubscribe from {subscriber} message while publishing " +
+					$"{_isPublishing.Item2.GetType().Name} message. Use {nameof(PublishSafe)} instead!");
+			}
 			foreach (var subscriptionObjects in _subscriptions.Values)
 			{
 				subscriptionObjects.Remove(subscriber);
