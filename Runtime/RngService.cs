@@ -220,7 +220,7 @@ namespace GameLovers.Services
 		/// </remarks>
 		public static floatP Range(floatP min, floatP max, int[] rndState, bool maxInclusive)
 		{
-			if (min > max || maxInclusive && Math.Abs(min - max) < floatP.Epsilon)
+			if (min > max || (!maxInclusive && Math.Abs(min - max) < floatP.Epsilon))
 			{
 				throw new IndexOutOfRangeException("The min range value must be less the max range value");
 			}

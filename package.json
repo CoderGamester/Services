@@ -2,7 +2,7 @@
   "name": "com.gamelovers.services",
   "displayName": "Services",
   "author": "Miguel Tomas",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "unity": "2022.3",
   "license": "MIT",
   "description": "The purpose of this package is to provide a set of services to ease the development of a basic game architecture",
