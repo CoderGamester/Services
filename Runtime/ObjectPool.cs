@@ -88,11 +88,22 @@ namespace GameLovers.Services
 		/// This function does not reset the entity. For that, have the entity implement <see cref="IPoolEntityDespawn"/> or do it externally
 		/// </summary>
 		void DespawnAll();
+		
+		/// <inheritdoc cref="IDisposable.Dispose"/>
+		/// <remarks>
+		/// Will also dispose the sample entity depending on the value of <paramref name="disposeSampleEntity"/>
+		/// </remarks>
+		void Dispose(bool disposeSampleEntity);
 	}
 
 	/// <inheritdoc />
 	public interface IObjectPool<T> : IObjectPool where T : class
 	{
+		/// <summary>
+		/// The entity reference used to create the pooled entities
+		/// </summary>
+		T SampleEntity { get; }
+		
 		/// <summary>
 		/// Requests the collection of already spawned elements as a read only list
 		/// </summary>
@@ -102,6 +113,11 @@ namespace GameLovers.Services
 		/// Checks if there is an entity in the bool that matches the given <paramref name="conditionCheck"/>
 		/// </summary>
 		bool IsSpawned(Func<T, bool> conditionCheck);
+
+		/// <summary>
+		/// Clears any entities in the pool and resets it to the given <paramref name="initSize"/>
+		/// </summary>
+		void Reset(uint initSize, T sampleEntity);
 
 		/// <summary>
 		/// Spawns and returns an entity of the given type <typeparamref name="T"/>
@@ -146,19 +162,22 @@ namespace GameLovers.Services
 	/// <inheritdoc />
 	public abstract class ObjectPoolBase<T> : IObjectPool<T> where T : class
 	{
-		public readonly T SampleEntity;
-
 		protected readonly IList<T> SpawnedEntities = new List<T>();
 
 		private readonly Stack<T> _stack;
 		private readonly Func<T, T> _instantiator;
+		
+		private T _sampleEntity;
+		
+		/// <inheritdoc />
+		public T SampleEntity => _sampleEntity;
 
 		/// <inheritdoc />
 		public IReadOnlyList<T> SpawnedReadOnly => SpawnedEntities as IReadOnlyList<T>;
 
 		protected ObjectPoolBase(uint initSize, T sampleEntity, Func<T, T> instantiator)
 		{
-			SampleEntity = sampleEntity;
+			_sampleEntity = sampleEntity;
 			_instantiator = instantiator;
 			_stack = new Stack<T>((int)initSize);
 
@@ -183,6 +202,19 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
+		public void Reset(uint initSize, T sampleEntity)
+		{
+			Dispose();
+			
+			_sampleEntity = sampleEntity;
+
+			for (var i = 0; i < initSize; i++)
+			{
+				_stack.Push(CallInstantiator());
+			}
+		}
+
+		/// <inheritdoc />
 		public List<T> Clear()
 		{
 			var ret = new List<T>(SpawnedEntities);
@@ -201,6 +233,16 @@ namespace GameLovers.Services
 			{
 				Despawn(SpawnedEntities[i]);
 			}
+		}
+
+		public virtual void Dispose(bool disposeSampleEntity)
+		{
+			if (disposeSampleEntity)
+			{
+				_sampleEntity = null;
+			}
+			
+			Dispose();
 		}
 
 		/// <inheritdoc />
@@ -262,7 +304,11 @@ namespace GameLovers.Services
 			return despawned;
 		}
 
-		public abstract void Dispose();
+		/// <inheritdoc />
+		public virtual void Dispose()
+		{
+			Clear();
+		}
 
 		protected virtual T SpawnEntity()
 		{
@@ -316,25 +362,12 @@ namespace GameLovers.Services
 	}
 
 	/// <inheritdoc />
-	/// <remarks>
-	/// Useful to for pools that use object references to create new instances (ex: GameObjects)
-	/// </remarks>
-	public class ObjectRefPool<T> : ObjectPoolBase<T> where T : class
+	public class ObjectPool<T> : ObjectPoolBase<T> where T : class
 	{
-		public ObjectRefPool(uint initSize, T sampleEntity, Func<T, T> instantiator) : base(initSize, sampleEntity, instantiator)
-		{
-		}
-
-		/// <inheritdoc />
-		public override void Dispose()
-		{
-			Clear();
-		}
-	}
-
-	/// <inheritdoc />
-	public class ObjectPool<T> : ObjectRefPool<T> where T : class
-	{
+		public ObjectPool(uint initSize, T sampleEntity, Func<T, T> instantiator) : base(initSize, sampleEntity, instantiator)
+        {
+        }
+		
 		public ObjectPool(uint initSize, Func<T> instantiator) : base(initSize, instantiator(), entityRef => instantiator.Invoke())
 		{
 		}
@@ -358,6 +391,14 @@ namespace GameLovers.Services
 
 		public GameObjectPool(uint initSize, GameObject sampleEntity, Func<GameObject, GameObject> instantiator) : base(initSize, sampleEntity, instantiator)
 		{
+		}
+
+		/// <inheritdoc />
+		public override void Dispose(bool disposeSampleEntity)
+		{
+			Object.Destroy(SampleEntity);
+
+			base.Dispose(disposeSampleEntity);
 		}
 
 		/// <inheritdoc />
@@ -421,6 +462,14 @@ namespace GameLovers.Services
 
 		public GameObjectPool(uint initSize, T sampleEntity, Func<T, T> instantiator) : base(initSize, sampleEntity, instantiator)
 		{
+		}
+
+		/// <inheritdoc />
+		public override void Dispose(bool disposeSampleEntity)
+		{
+			Object.Destroy(SampleEntity.gameObject);
+
+			base.Dispose(disposeSampleEntity);
 		}
 
 		/// <inheritdoc />

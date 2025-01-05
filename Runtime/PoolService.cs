@@ -50,7 +50,7 @@ namespace GameLovers.Services
 		/// <inheritdoc cref="IObjectPool{T}.Spawn{TData}"/>
 		T Spawn<T, TData>(TData data) where T : class, IPoolEntitySpawn<TData>;
 
-		/// <inheritdoc cref="IObjectPool{T}.Despawn"/>
+		/// <inheritdoc cref="IObjectPool{T}.Despawn(T)"/>
 		bool Despawn<T>(T entity) where T : class;
 
 		/// <summary>
@@ -70,6 +70,9 @@ namespace GameLovers.Services
 		/// A dictionary containing all the pools in this service, where the key is the type of the pool and the value is the pool itself.
 		/// </returns>
 		IDictionary<Type, IObjectPool> Clear();
+
+		/// <inheritdoc cref="IObjectPool{T}.Dispose(bool)"/>
+		void Dispose<T>(bool disposeSampleEntity) where T : class;
 	}
 
 	/// <inheritdoc />
@@ -142,6 +145,13 @@ namespace GameLovers.Services
 			_pools.Clear();
 
 			return ret;
+		}
+
+		/// <inheritdoc />
+		public void Dispose<T>(bool disposeSampleEntity) where T : class
+		{
+			GetPool<T>().Dispose(disposeSampleEntity);
+			RemovePool<T>();
 		}
 
 		/// <inheritdoc />

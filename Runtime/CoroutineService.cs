@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using Action = System.Action;
 using Object = UnityEngine.Object;
 
 // ReSharper disable once CheckNamespace
@@ -14,6 +15,10 @@ namespace GameLovers.Services
 	public interface IAsyncCoroutine
 	{
 		/// <summary>
+		/// Get the execution status of the coroutine
+		/// </summary>
+		bool IsRunning { get; }
+		/// <summary>
 		/// Get the complete operation status of the coroutine
 		/// </summary>
 		bool IsCompleted { get; }
@@ -21,30 +26,34 @@ namespace GameLovers.Services
 		/// Get the current coroutine being executed
 		/// </summary>
 		Coroutine Coroutine { get; }
+		/// <summary>
+		/// The Unity time the coroutine started
+		/// </summary>
+		float StartTime { get; }
 		
 		/// <summary>
 		/// Sets the action <paramref name="onComplete"/> callback to be invoked when the coroutine is completed
 		/// </summary>
 		void OnComplete(Action onComplete);
+		/// <summary>
+		/// Stops the execution of this coroutine
+		/// </summary>
+		void StopCoroutine(bool triggerOnComplete = false);
 	}
 
-	/// <inheritdoc cref="IAsyncCoroutine"/>
-	public interface IAsyncCoroutine<T>
+	/// <inheritdoc />
+	public interface IAsyncCoroutine<T> : IAsyncCoroutine
 	{
-		/// <inheritdoc cref="IAsyncCoroutine.IsCompleted"/>
-		bool IsCompleted { get; }
-		/// <inheritdoc cref="IAsyncCoroutine.Coroutine"/>
-		Coroutine Coroutine { get; }
 		/// <summary>
 		/// The data to be returned on the coroutine completion
 		/// </summary>
-		T Data { get; }
+		T Data { get; set; }
 		
 		/// <summary>
 		/// Sets the action <paramref name="onComplete"/> callback to be invoked when the coroutine is completed with the
-		/// <paramref name="data"/> reference in the callback
+		/// <seealso cref="Data"/> reference in the callback
 		/// </summary>
-		void OnComplete(T data, Action<T> onComplete);
+		void OnComplete(Action<T> onComplete);
 	}
 	
 	/// <summary>
@@ -70,9 +79,20 @@ namespace GameLovers.Services
 		IAsyncCoroutine StartAsyncCoroutine(IEnumerator routine);
 		/// <summary>
 		/// Follows the same principle and execution of <see cref="MonoBehaviour.StartCoroutine(IEnumerator)"/> but returns
-		/// a <see cref="IAsyncCoroutine{T}"/> to provide a callback on complete of the coroutine with given <typeparamref name="T"/> type
+		/// a <see cref="IAsyncCoroutine{T}"/> to provide a callback on complete of the coroutine with given <paramref name="data"/>
 		/// </summary>
-		IAsyncCoroutine<T> StartAsyncCoroutine<T>(IEnumerator routine);
+		IAsyncCoroutine<T> StartAsyncCoroutine<T>(IEnumerator routine, T data);
+		/// <summary>
+		/// Executes <paramref name="call"/> in a <see cref="StartAsyncCoroutine"/> with the given <paramref name="delay"/>.
+		/// Useful for delay callbacks 
+		/// </summary>
+		IAsyncCoroutine StartDelayCall(Action call, float delay);
+		/// <summary>
+		/// Executes <paramref name="call"/> in a <see cref="StartAsyncCoroutine"/> with the given <paramref name="delay"/>
+		/// and <paramref name="data"/> data type.
+		/// Useful for delay callbacks 
+		/// </summary>
+		IAsyncCoroutine<T> StartDelayCall<T>(Action<T> call, T data,float delay);
 		/// <inheritdoc cref="MonoBehaviour.StopCoroutine(Coroutine)"/>
 		void StopCoroutine(Coroutine coroutine);
 		/// <inheritdoc cref="MonoBehaviour.StopAllCoroutines"/>
@@ -86,7 +106,7 @@ namespace GameLovers.Services
 
 		public CoroutineService()
 		{
-			var gameObject = new GameObject(typeof(CoroutineServiceMonoBehaviour).Name);
+			var gameObject = new GameObject(nameof(CoroutineServiceMonoBehaviour));
 
 			_serviceObject = gameObject.AddComponent<CoroutineServiceMonoBehaviour>();
 			
@@ -120,7 +140,7 @@ namespace GameLovers.Services
 		/// <inheritdoc />
 		public IAsyncCoroutine StartAsyncCoroutine(IEnumerator routine)
 		{
-			var asyncCoroutine = new AsyncCoroutine();
+			var asyncCoroutine = new AsyncCoroutine(this);
 
 			asyncCoroutine.SetCoroutine(_serviceObject.ExternalStartCoroutine(InternalCoroutine(routine, asyncCoroutine)));
 
@@ -128,15 +148,37 @@ namespace GameLovers.Services
 		}
 
 		/// <inheritdoc />
-		public IAsyncCoroutine<T> StartAsyncCoroutine<T>(IEnumerator routine)
+		public IAsyncCoroutine<T> StartAsyncCoroutine<T>(IEnumerator routine, T data)
 		{
-			var asyncCoroutine = new AsyncCoroutine<T>();
+			var asyncCoroutine = new AsyncCoroutine<T>(this, data);
 
 			asyncCoroutine.SetCoroutine(_serviceObject.ExternalStartCoroutine(InternalCoroutine(routine, asyncCoroutine)));
 
 			return asyncCoroutine;
 		}
-		
+
+		/// <inheritdoc />
+		public IAsyncCoroutine StartDelayCall(Action call, float delay)
+		{
+			var asyncCoroutine = new AsyncCoroutine(this);
+
+			asyncCoroutine.OnComplete(call);
+			asyncCoroutine.SetCoroutine(_serviceObject.ExternalStartCoroutine(InternalDelayCoroutine(delay, asyncCoroutine)));
+
+			return asyncCoroutine;
+		}
+
+		/// <inheritdoc />
+		public IAsyncCoroutine<T> StartDelayCall<T>(Action<T> call, T data, float delay)
+		{
+			var asyncCoroutine = new AsyncCoroutine<T>(this, data);
+
+			asyncCoroutine.OnComplete(call);
+			asyncCoroutine.SetCoroutine(_serviceObject.ExternalStartCoroutine(InternalDelayCoroutine(delay, asyncCoroutine)));
+
+			return asyncCoroutine;
+		}
+
 		/// <inheritdoc />
 		public void StopCoroutine(Coroutine coroutine)
 		{
@@ -165,22 +207,38 @@ namespace GameLovers.Services
 
 			completed.Completed();
 		}
+
+		private static IEnumerator InternalDelayCoroutine(float delayInSeconds, ICompleteCoroutine completed)
+		{
+			yield return new WaitForSeconds(delayInSeconds);
+
+			completed.Completed();
+		}
 		
 		#region Private Interfaces
 		
 		private interface ICompleteCoroutine
 		{
 			void Completed();
-			
-			void SetCoroutine(Coroutine coroutine);
 		}
 		
 		private class AsyncCoroutine : IAsyncCoroutine, ICompleteCoroutine
 		{
+			private readonly ICoroutineService _coroutineService;
+			
 			private Action _onComplete;
 		
+			public bool IsRunning => Coroutine != null;
 			public bool IsCompleted { get; private set; }
 			public Coroutine Coroutine { get; private set; }
+			public float StartTime { get; } = Time.time;
+			
+			private AsyncCoroutine() {}
+
+			public AsyncCoroutine(ICoroutineService coroutineService)
+			{
+				_coroutineService = coroutineService;
+			}
 
 			public void SetCoroutine(Coroutine coroutine)
 			{
@@ -192,6 +250,13 @@ namespace GameLovers.Services
 				_onComplete = onComplete;
 			}
 
+			public void StopCoroutine(bool triggerOnComplete = false)
+			{
+				_coroutineService.StopCoroutine(Coroutine);
+				
+				OnCompleteTrigger();
+			}
+
 			public void Completed()
 			{
 				if (IsCompleted)
@@ -201,41 +266,35 @@ namespace GameLovers.Services
 
 				IsCompleted = true;
 				Coroutine = null;
-			
+
+				OnCompleteTrigger();
+			}
+
+			protected virtual void OnCompleteTrigger()
+			{
 				_onComplete?.Invoke();
 			}
 		}
 
-		private class AsyncCoroutine<T> : IAsyncCoroutine<T>, ICompleteCoroutine
+		private class AsyncCoroutine<T> : AsyncCoroutine, IAsyncCoroutine<T>
 		{
 			private Action<T> _onComplete;
-		
-			public bool IsCompleted { get; private set; }
-			public Coroutine Coroutine { get; private set; }
-			public T Data { get; private set; }
+			
+			public T Data { get; set; }
 
-			public void SetCoroutine(Coroutine coroutine)
+			public AsyncCoroutine(ICoroutineService coroutineService, T data) : base(coroutineService)
 			{
-				Coroutine = coroutine;
-			}
-		
-			public void OnComplete(T data, Action<T> onComplete)
-			{
-				_onComplete = onComplete;
-				
 				Data = data;
 			}
-
-			public void Completed()
+		
+			public void OnComplete(Action<T> onComplete)
 			{
-				if (IsCompleted)
-				{
-					return;
-				}
+				_onComplete = onComplete;
+			}
 
-				IsCompleted = true;
-				Coroutine = null;
-			
+			protected override void OnCompleteTrigger()
+			{
+				base.OnCompleteTrigger();
 				_onComplete?.Invoke(Data);
 			}
 		}
