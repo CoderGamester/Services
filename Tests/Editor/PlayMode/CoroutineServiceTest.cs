@@ -67,8 +67,8 @@ namespace GameLoversEditor.Services.Tests
 			const int testValue2 = 10;
 			int testCompleted = 0;
 
-			var asyncCoroutine = _coroutineService.StartAsyncCoroutine<int>(TestCoroutine(testValue1));
-			asyncCoroutine.OnComplete(testValue2, newValue => testCompleted = newValue);
+			var asyncCoroutine = _coroutineService.StartAsyncCoroutine(TestCoroutine(testValue1), testValue2);
+			asyncCoroutine.OnComplete(newValue => testCompleted = newValue);
 
 			yield return asyncCoroutine.Coroutine;
 			

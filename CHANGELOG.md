@@ -4,6 +4,14 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2025-01-05
+
+**New**:
+- Added *StartDelayCall* method to *ICoroutineService* to allow deferred methods to be safely executed within the bounds of a Unity Coroutine
+- Added the possibility to know the current state of an *IAsyncCoroutine*
+- Added the access to the Sample Entity used to generete new entites within an *IObjectPool<T>* and destroy it when disposing the object pool
+- Added the possibility to reset an *IObjectPool<T>* to a new state 
+
 ## [0.14.1] - 2024-11-30
 
 **Fixed**:
