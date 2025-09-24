@@ -58,6 +58,9 @@ namespace GameLovers.Services
 	{
 		private readonly TGameLogic _gameLogic;
 		private readonly IMessageBrokerService _messageBroker;
+		
+		protected TGameLogic  GameLogic => _gameLogic;
+		protected IMessageBrokerService MessageBroker => _messageBroker;
 
 		public CommandService(TGameLogic gameLogic, IMessageBrokerService messageBroker)
 		{
