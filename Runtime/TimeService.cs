@@ -79,9 +79,13 @@ namespace GameLovers.Services
 		private float _extraTime;
 		private DateTime _initialTime = DateTime.MinValue;
 
-		/// <summary>Seconds added by AddTime, on top of real elapsed time. Editor introspection only — see AGENTS.md §4.</summary>
+		/// <summary>
+		/// Seconds added by AddTime, on top of real elapsed time. Editor introspection only — see AGENTS.md §4.
+		/// </summary>
 		internal float ExtraTime => _extraTime;
-		/// <summary>The reference instant every conversion is measured from. Editor introspection only — see AGENTS.md §4.</summary>
+		/// <summary>
+		/// The reference instant every conversion is measured from. Editor introspection only — see AGENTS.md §4.
+		/// </summary>
 		internal DateTime InitialTime => _initialTime;
 
 		/// <inheritdoc />
