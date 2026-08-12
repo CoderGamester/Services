@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+**Changed**:
+- Lowered the declared Unity minimum from 6000.3 to 6000.0 and documented 6000.0.x, 6000.3.x, and 6000.5.x as compatibility reference streams.
+
 ## [2.1.2] - 2026-08-04
 
 **Changed**:
